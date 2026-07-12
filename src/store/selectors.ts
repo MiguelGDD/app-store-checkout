@@ -5,6 +5,11 @@ import type { RootState } from './store';
 import { screenToFlowIndex } from './checkout/checkoutSlice';
 
 export const selectCatalogItems = (state: RootState) => state.catalog.items;
+export const selectCatalogStatus = (state: RootState) => state.catalog.status;
+export const selectCatalogError = (state: RootState) => state.catalog.error;
+export const selectCatalogSource = (state: RootState) => state.catalog.source;
+export const selectCatalogLastSyncedAt = (state: RootState) =>
+  state.catalog.lastSyncedAt;
 export const selectCartItemsMap = (state: RootState) => state.cart.items;
 export const selectCheckoutActiveScreen = (state: RootState) =>
   state.checkout.activeScreen;

@@ -10,6 +10,8 @@ React Native app shell for the mobile checkout challenge.
 - Reusable UI pieces for cards, buttons, stepper, empty states and tab navigation.
 - Redux store with Flux-style slices for catalog, cart, checkout and transaction.
 - Sensitive transaction data is encrypted before it is persisted to AsyncStorage.
+- Remote catalog sync through a centralized backend API client with loading,
+  success and error states.
 
 ## Requirements
 
@@ -69,6 +71,9 @@ npx tsc --noEmit
 ## Notes
 
 - The catalog, cart and checkout flow are currently powered by demo data.
+- The catalog now syncs from the deployed backend by default. If you need to
+  point the app to a different backend, update
+  [`src/infrastructure/backend/backendConfig.ts`](./src/infrastructure/backend/backendConfig.ts).
 - The Redux slices and workflow helpers are intentionally small so task 3 can
   connect stock, task 4 can wire payment, and the later tasks can reuse the
   same shell without changing the navigation structure.

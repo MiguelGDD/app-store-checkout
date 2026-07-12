@@ -12,6 +12,11 @@ import type { ScreenId } from './types';
 import { useResponsiveLayout } from './utils/responsive';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import {
+  selectCatalogError,
+  selectCatalogItems,
+  selectCatalogLastSyncedAt,
+  selectCatalogSource,
+  selectCatalogStatus,
   selectActiveTab,
   selectCartCount,
   selectCartLineItems,
@@ -25,6 +30,7 @@ import { checkoutActions } from './store/checkout/checkoutSlice';
 import { cartActions } from './store/cart/cartSlice';
 import { transactionActions } from './store/transaction/transactionSlice';
 import { loadEncryptedTransactionSnapshot } from './store/transactionStorage';
+import { syncCatalog } from './store/workflows/catalogWorkflow';
 import { submitCheckout } from './store/workflows/checkoutWorkflow';
 
 export default function AppShell() {
@@ -32,6 +38,11 @@ export default function AppShell() {
   const layout = useResponsiveLayout();
   const activeScreen = useAppSelector(selectCheckoutActiveScreen);
   const activeTab = useAppSelector(selectActiveTab);
+  const catalogItems = useAppSelector(selectCatalogItems);
+  const catalogStatus = useAppSelector(selectCatalogStatus);
+  const catalogError = useAppSelector(selectCatalogError);
+  const catalogSource = useAppSelector(selectCatalogSource);
+  const catalogLastSyncedAt = useAppSelector(selectCatalogLastSyncedAt);
   const cartItems = useAppSelector(selectCartLineItems);
   const cartQuantities = useAppSelector(selectCartQuantities);
   const cartCount = useAppSelector(selectCartCount);
@@ -57,6 +68,10 @@ export default function AppShell() {
     return () => {
       cancelled = true;
     };
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(syncCatalog());
   }, [dispatch]);
 
   const navigate = (screen: ScreenId) => {
@@ -87,17 +102,29 @@ export default function AppShell() {
         {activeScreen === 'home' ? (
           <HomeScreen
             layout={layout}
+            catalogItems={catalogItems}
+            catalogStatus={catalogStatus}
+            catalogError={catalogError}
+            catalogSource={catalogSource}
+            catalogLastSyncedAt={catalogLastSyncedAt}
             cartCount={cartCount}
             lastOrder={latestOrder}
             flowIndex={flowIndex}
             onNavigate={navigate}
+            onRetryCatalogSync={() => dispatch(syncCatalog())}
           />
         ) : null}
         {activeScreen === 'catalog' ? (
           <CatalogScreen
             layout={layout}
+            catalogItems={catalogItems}
+            catalogStatus={catalogStatus}
+            catalogError={catalogError}
+            catalogSource={catalogSource}
+            catalogLastSyncedAt={catalogLastSyncedAt}
             cartQuantities={cartQuantities}
             onAddToCart={addToCart}
+            onRetryCatalogSync={() => dispatch(syncCatalog())}
           />
         ) : null}
         {activeScreen === 'cart' ? (
