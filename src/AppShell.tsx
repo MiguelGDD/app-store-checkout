@@ -1,4 +1,4 @@
-import { useReducer } from 'react';
+import { useEffect } from 'react';
 import { Platform, StatusBar, StyleSheet, View } from 'react-native';
 
 import { TabBar } from './components/TabBar';
@@ -8,40 +8,71 @@ import { HomeScreen } from './screens/HomeScreen';
 import { CatalogScreen } from './screens/CatalogScreen';
 import { CartScreen } from './screens/CartScreen';
 import { CheckoutScreen } from './screens/CheckoutScreen';
-import {
-  initialShellState,
-  selectCartCount,
-  selectCartItems,
-  selectCartTotal,
-  shellReducer,
-} from './state/shellState';
-import type { ScreenId, TabId } from './types';
+import type { ScreenId } from './types';
 import { useResponsiveLayout } from './utils/responsive';
+import { useAppDispatch, useAppSelector } from './store/hooks';
+import {
+  selectActiveTab,
+  selectCartCount,
+  selectCartLineItems,
+  selectCartQuantities,
+  selectCartTotal,
+  selectCheckoutActiveScreen,
+  selectCheckoutFlowIndex,
+  selectLatestOrderSummary,
+} from './store/selectors';
+import { checkoutActions } from './store/checkout/checkoutSlice';
+import { cartActions } from './store/cart/cartSlice';
+import { transactionActions } from './store/transaction/transactionSlice';
+import { loadEncryptedTransactionSnapshot } from './store/transactionStorage';
+import { submitCheckout } from './store/workflows/checkoutWorkflow';
 
 export default function AppShell() {
+  const dispatch = useAppDispatch();
   const layout = useResponsiveLayout();
-  const [state, dispatch] = useReducer(shellReducer, initialShellState);
+  const activeScreen = useAppSelector(selectCheckoutActiveScreen);
+  const activeTab = useAppSelector(selectActiveTab);
+  const cartItems = useAppSelector(selectCartLineItems);
+  const cartQuantities = useAppSelector(selectCartQuantities);
+  const cartCount = useAppSelector(selectCartCount);
+  const cartTotal = useAppSelector(selectCartTotal);
+  const latestOrder = useAppSelector(selectLatestOrderSummary);
+  const flowIndex = useAppSelector(selectCheckoutFlowIndex);
 
-  const cartItems = selectCartItems(state.cart);
-  const cartCount = selectCartCount(state.cart);
-  const cartTotal = selectCartTotal(state.cart);
-  const activeTab: TabId =
-    state.activeScreen === 'confirmation' ? 'checkout' : state.activeScreen;
+  useEffect(() => {
+    let cancelled = false;
+
+    loadEncryptedTransactionSnapshot()
+      .then((snapshot) => {
+        if (!cancelled) {
+          dispatch(transactionActions.hydrateTransactions(snapshot));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          dispatch(transactionActions.hydrateTransactions(null));
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dispatch]);
 
   const navigate = (screen: ScreenId) => {
-    dispatch({ type: 'NAVIGATE', screen });
+    dispatch(checkoutActions.navigateTo(screen));
   };
 
   const addToCart = (productId: string) => {
-    dispatch({ type: 'ADD_TO_CART', productId });
+    dispatch(cartActions.itemAdded({ productId }));
   };
 
   const decrementItem = (productId: string) => {
-    dispatch({ type: 'DECREMENT_ITEM', productId });
+    dispatch(cartActions.itemDecremented({ productId }));
   };
 
   const placeOrder = () => {
-    dispatch({ type: 'PLACE_ORDER' });
+    dispatch(submitCheckout());
   };
 
   return (
@@ -53,48 +84,50 @@ export default function AppShell() {
         <View style={styles.glowThree} />
       </View>
       <View style={styles.screen}>
-        {state.activeScreen === 'home' ? (
+        {activeScreen === 'home' ? (
           <HomeScreen
             layout={layout}
             cartCount={cartCount}
-            lastOrder={state.lastOrder}
+            lastOrder={latestOrder}
+            flowIndex={flowIndex}
             onNavigate={navigate}
           />
         ) : null}
-        {state.activeScreen === 'catalog' ? (
+        {activeScreen === 'catalog' ? (
           <CatalogScreen
             layout={layout}
-            cartQuantities={state.cart}
+            cartQuantities={cartQuantities}
             onAddToCart={addToCart}
           />
         ) : null}
-        {state.activeScreen === 'cart' ? (
+        {activeScreen === 'cart' ? (
           <CartScreen
             layout={layout}
             items={cartItems}
             itemCount={cartCount}
             total={cartTotal}
-            lastOrder={state.lastOrder}
+            lastOrder={latestOrder}
             onNavigate={navigate}
             onIncrement={addToCart}
             onDecrement={decrementItem}
           />
         ) : null}
-        {state.activeScreen === 'checkout' ? (
+        {activeScreen === 'checkout' ? (
           <CheckoutScreen
             layout={layout}
             items={cartItems}
             itemCount={cartCount}
             total={cartTotal}
-            lastOrder={state.lastOrder}
+            lastOrder={latestOrder}
+            flowIndex={flowIndex}
             onNavigate={navigate}
             onPlaceOrder={placeOrder}
           />
         ) : null}
-        {state.activeScreen === 'confirmation' ? (
+        {activeScreen === 'confirmation' ? (
           <ConfirmationScreen
             layout={layout}
-            lastOrder={state.lastOrder}
+            lastOrder={latestOrder}
             cartCount={cartCount}
             onNavigate={navigate}
           />

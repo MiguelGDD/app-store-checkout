@@ -23,6 +23,7 @@ type CheckoutScreenProps = {
   itemCount: number;
   total: number;
   lastOrder: OrderSummary | null;
+  flowIndex: number;
   onNavigate: (screen: ScreenId) => void;
   onPlaceOrder: () => void;
 };
@@ -33,6 +34,7 @@ export function CheckoutScreen({
   itemCount,
   total,
   lastOrder,
+  flowIndex,
   onNavigate,
   onPlaceOrder,
 }: CheckoutScreenProps) {
@@ -47,7 +49,7 @@ export function CheckoutScreen({
 
         <AppCard style={styles.stepCard}>
           <Text style={styles.sectionLabel}>Flow progress</Text>
-          <FlowStepper steps={flowSteps} activeIndex={3} />
+          <FlowStepper steps={flowSteps} activeIndex={flowIndex} />
         </AppCard>
 
         {items.length === 0 ? (

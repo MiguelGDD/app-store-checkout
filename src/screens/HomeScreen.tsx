@@ -16,6 +16,7 @@ type HomeScreenProps = {
   layout: ResponsiveLayout;
   cartCount: number;
   lastOrder: OrderSummary | null;
+  flowIndex: number;
   onNavigate: (screen: ScreenId) => void;
 };
 
@@ -23,6 +24,7 @@ export function HomeScreen({
   layout,
   cartCount,
   lastOrder,
+  flowIndex,
   onNavigate,
 }: HomeScreenProps) {
   const featuredProduct = products.find((product) => product.id === featuredProductId) ?? products[0];
@@ -95,7 +97,7 @@ export function HomeScreen({
 
         <AppCard style={styles.flowCard}>
           <Text style={styles.sectionLabel}>Flow map</Text>
-          <FlowStepper steps={flowSteps} activeIndex={0} />
+          <FlowStepper steps={flowSteps} activeIndex={flowIndex} />
         </AppCard>
 
         {lastOrder ? (

@@ -8,7 +8,8 @@ React Native app shell for the mobile checkout challenge.
 - Custom navigation without an external navigation library.
 - Five screens in the flow: home, catalog, cart, checkout and confirmation.
 - Reusable UI pieces for cards, buttons, stepper, empty states and tab navigation.
-- Local reducer-based state so the shell is ready for later Redux integration.
+- Redux store with Flux-style slices for catalog, cart, checkout and transaction.
+- Sensitive transaction data is encrypted before it is persisted to AsyncStorage.
 
 ## Requirements
 
@@ -68,6 +69,6 @@ npx tsc --noEmit
 ## Notes
 
 - The catalog, cart and checkout flow are currently powered by demo data.
-- The reducer and screen layout are intentionally kept small so task 2 can add
-  data, task 3 can connect stock, and the later tasks can wire payment and
-  fulfillment without changing the shell.
+- The Redux slices and workflow helpers are intentionally small so task 3 can
+  connect stock, task 4 can wire payment, and the later tasks can reuse the
+  same shell without changing the navigation structure.
