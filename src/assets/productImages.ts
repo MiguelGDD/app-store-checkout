@@ -9,12 +9,12 @@ export type LocalProductImage = {
 const productImagesByName: Record<string, LocalProductImage> = {
   'smartphone x': {
     source: require('../../assets/products/smartphone-x.jpeg'),
-    resizeMode: 'contain',
+    resizeMode: 'cover',
     scale: 1,
   },
   'smartwatch pro': {
     source: require('../../assets/products/smartwatch-pro.jpeg'),
-    resizeMode: 'contain',
+    resizeMode: 'cover',
     scale: 1,
   },
   'wireless headphones': {
