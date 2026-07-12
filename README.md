@@ -12,6 +12,7 @@ onboarding de pago con tarjeta y confirmacion de transaccion.
 - Estado de transaccion pendiente, completada o fallida.
 - Persistencia cifrada del resumen de transacciones en `AsyncStorage`.
 - Interfaz responsive para telefonos compactos y pantallas grandes.
+- Splash screen nativo personalizado para Android.
 - Ilustraciones locales construidas con primitivas nativas, sin descargas remotas.
 
 ## Stack
