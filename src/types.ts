@@ -20,6 +20,33 @@ export type OrderSummary = {
   total: number;
 };
 
+export type TransactionStatus = 'pending' | 'completed' | 'failed';
+
+export type TransactionSensitiveData = {
+  customerName: string;
+  customerEmail: string;
+  documentId: string;
+  paymentToken: string;
+  paymentReference: string;
+};
+
+export type TransactionSummary = OrderSummary & {
+  transactionId: string;
+  status: TransactionStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TransactionRecord = {
+  summary: TransactionSummary;
+  encryptedSensitiveData: string;
+};
+
+export type TransactionStateSnapshot = {
+  latest: TransactionRecord | null;
+  history: TransactionRecord[];
+};
+
 export type ResponsiveLayout = {
   width: number;
   isCompact: boolean;

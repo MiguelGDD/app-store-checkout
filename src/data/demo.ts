@@ -57,8 +57,8 @@ export const metrics: Metric[] = [
   },
   {
     label: 'State',
-    value: 'Flux ready',
-    description: 'Reducer-based shell prepared for Redux migration.',
+    value: 'Redux ready',
+    description: 'Slices and secure transaction storage are now wired in.',
   },
   {
     label: 'Layout',
