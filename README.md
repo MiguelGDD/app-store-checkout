@@ -12,6 +12,7 @@ React Native app shell for the mobile checkout challenge.
 - Sensitive transaction data is encrypted before it is persisted to AsyncStorage.
 - Remote catalog sync through a centralized backend API client with loading,
   success and error states.
+- Android release build is configured and generates a ready-to-install APK.
 
 ## Requirements
 
@@ -73,6 +74,34 @@ Run TypeScript typecheck:
 ```bash
 npx tsc --noEmit
 ```
+
+## Android release
+
+Build the Android release APK from the `android` folder:
+
+```bash
+cd android
+./gradlew assembleRelease
+```
+
+On Windows:
+
+```powershell
+cd android
+.\gradlew assembleRelease
+```
+
+The APK is generated at:
+
+```text
+android/app/build/outputs/apk/release/app-release.apk
+```
+
+Current build state:
+
+- The release APK is generated successfully in the local environment.
+- The release build uses the repository signing setup already present in `android/app/build.gradle`.
+- If you need to rebuild after changing native dependencies, run `./gradlew clean assembleRelease`.
 
 ## Coverage
 
