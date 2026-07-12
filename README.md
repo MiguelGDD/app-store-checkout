@@ -148,9 +148,11 @@ Los datos introducidos en el formulario de tarjeta no se guardan en
 
 ## Imagenes y rendimiento
 
-Las tarjetas usan `ProductArtwork`, una ilustracion local hecha con vistas
-nativas. Esto evita depender de hosts externos, elimina saltos de layout y hace
-que el contenido visual aparezca junto con el primer render.
+Los tres productos principales usan imagenes JPEG empaquetadas en
+`assets/products`. `ProductArtwork` las resuelve estaticamente, conserva un
+tamano fijo y desactiva el fade para que aparezcan desde el primer render sin
+depender de la red. Los productos sin imagen registrada mantienen la
+ilustracion nativa como fallback.
 
 ## Calidad
 

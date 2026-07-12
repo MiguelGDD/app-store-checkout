@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
+import { resolveLocalProductImage } from '../assets/productImages';
 import { colors, fonts, radius } from '../theme';
 import type { Product } from '../types';
 
@@ -13,6 +14,7 @@ export function ProductArtwork({
   compact = false,
 }: ProductArtworkProps) {
   const initial = product.name.trim().charAt(0).toUpperCase();
+  const localImage = resolveLocalProductImage(product.name);
 
   return (
     <View
@@ -23,11 +25,30 @@ export function ProductArtwork({
         { backgroundColor: `${product.accent}18` },
       ]}
     >
-      <View style={[styles.orbit, { borderColor: `${product.accent}55` }]} />
-      <View style={[styles.tile, { backgroundColor: product.accent }]}>
-        <Text style={styles.initial}>{initial}</Text>
-      </View>
-      <View style={[styles.dot, { backgroundColor: product.accent }]} />
+      {localImage ? (
+        <Image
+          source={localImage.source}
+          resizeMode={localImage.resizeMode}
+          fadeDuration={0}
+          accessible={false}
+          style={[
+            styles.image,
+            localImage.scale !== 1 && {
+              transform: [{ scale: localImage.scale }],
+            },
+          ]}
+        />
+      ) : (
+        <>
+          <View
+            style={[styles.orbit, { borderColor: `${product.accent}55` }]}
+          />
+          <View style={[styles.tile, { backgroundColor: product.accent }]}>
+            <Text style={styles.initial}>{initial}</Text>
+          </View>
+          <View style={[styles.dot, { backgroundColor: product.accent }]} />
+        </>
+      )}
     </View>
   );
 }
@@ -47,6 +68,11 @@ const styles = StyleSheet.create({
   },
   frameCompact: {
     height: 84,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: colors.surface,
   },
   orbit: {
     position: 'absolute',
