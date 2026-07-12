@@ -3,7 +3,10 @@ import { StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 
 import { colors, radius, spacing } from '../theme';
-import { resolveResponsiveChoice, useResponsiveLayout } from '../utils/responsive';
+import {
+  resolveResponsiveChoice,
+  useResponsiveLayout,
+} from '../utils/responsive';
 
 type AppCardProps = {
   children: ReactNode;
@@ -41,11 +44,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.xl,
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 3,
+    shadowColor: '#425249',
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 7 },
+    elevation: 2,
   },
   compact: {
     padding: spacing.lg,
@@ -57,7 +60,7 @@ const styles = StyleSheet.create({
   },
   hero: {
     backgroundColor: colors.surfaceAlt,
-    borderColor: colors.primary,
+    borderColor: colors.borderStrong,
   },
   strong: {
     backgroundColor: colors.surfaceHighlight,

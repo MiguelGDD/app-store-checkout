@@ -1,64 +1,136 @@
-import type { AppThunk } from '../store';
 import {
-  selectCartCount,
-  selectCartLineItems,
-  selectCartTotal,
-} from '../selectors';
+  backendStoreApiClient,
+  type BackendStoreApiPort,
+} from '../../infrastructure/backend/backendApiClient';
+import { backendConfig } from '../../infrastructure/backend/backendConfig';
+import type {
+  BackendCreateTransactionInput,
+  BackendTransactionStatus,
+} from '../../infrastructure/backend/backendTypes';
+import { translate } from '../../i18n';
+import type { CardPaymentDetails, TransactionStatus } from '../../types';
+import type { AppThunk } from '../store';
+import { selectCartCount, selectCartLineItems } from '../selectors';
 import { cartActions } from '../cart/cartSlice';
 import { checkoutActions } from '../checkout/checkoutSlice';
 import { transactionActions } from '../transaction/transactionSlice';
 
-function buildTransactionNumber(index: number): string {
-  return `SC-${String(index).padStart(3, '0')}`;
-}
+type CheckoutApiPort = Pick<BackendStoreApiPort, 'createTransaction'>;
 
-export const submitCheckout = (): AppThunk => (dispatch, getState) => {
-  const state = getState();
-  const lineItems = selectCartLineItems(state);
-  const itemCount = selectCartCount(state);
-  const total = selectCartTotal(state);
-
-  if (lineItems.length === 0) {
-    dispatch(checkoutActions.navigateTo('checkout'));
-    return;
+function mapTransactionStatus(
+  status: BackendTransactionStatus,
+): TransactionStatus {
+  if (status === 'APPROVED') {
+    return 'completed';
   }
 
-  const nextSequence = state.transaction.history.length + 1;
-  const number = buildTransactionNumber(nextSequence);
-  const transactionId = `txn-${Date.now()}-${nextSequence}`;
-  const createdAt = new Date().toISOString();
+  if (status === 'PENDING') {
+    return 'pending';
+  }
 
-  dispatch(
-    transactionActions.recordTransaction({
-      transactionId,
-      number,
-      itemCount,
-      total,
-      status: 'pending',
-      createdAt,
-      updatedAt: createdAt,
-      customer: {
-        customerName: 'Comprador de prueba',
-        customerEmail: 'comprador@ejemplo.com',
-        documentId: '1000000000',
-        paymentToken: `token-${transactionId}`,
-        paymentReference: number,
-      },
-    }),
-  );
+  return 'failed';
+}
 
-  dispatch(
-    transactionActions.updateTransactionStatus({
-      transactionId,
-      status: 'completed',
-      updatedAt: new Date().toISOString(),
-    }),
-  );
+function buildRequest(
+  payment: CardPaymentDetails,
+  lineItems: ReturnType<typeof selectCartLineItems>,
+): BackendCreateTransactionInput | null {
+  const items = lineItems.map(({ product, quantity }) => ({
+    productId: Number(product.id),
+    quantity,
+  }));
 
-  dispatch(cartActions.cartReset());
-  dispatch(
-    checkoutActions.checkoutCompleted({
-      transactionNumber: number,
-    }),
-  );
-};
+  if (
+    items.some(
+      ({ productId, quantity }) =>
+        !Number.isInteger(productId) || productId < 1 || quantity < 1,
+    )
+  ) {
+    return null;
+  }
+
+  return {
+    customerId: backendConfig.customerId,
+    deliveryFee: backendConfig.deliveryFee,
+    items,
+    payment: {
+      ...payment,
+      number: payment.number.replace(/\s/g, ''),
+    },
+  };
+}
+
+export function createCheckoutWorkflow(
+  apiClient: CheckoutApiPort = backendStoreApiClient,
+) {
+  return (payment: CardPaymentDetails): AppThunk<Promise<void>> =>
+    async (dispatch, getState) => {
+      const state = getState();
+      const lineItems = selectCartLineItems(state);
+      const itemCount = selectCartCount(state);
+
+      if (state.checkout.isSubmitting) {
+        return;
+      }
+
+      if (lineItems.length === 0) {
+        dispatch(checkoutActions.navigateTo('checkout'));
+        return;
+      }
+
+      const request = buildRequest(payment, lineItems);
+
+      if (!request) {
+        dispatch(
+          checkoutActions.checkoutPaymentFailed({
+            error: translate('checkout.invalidCart'),
+          }),
+        );
+        return;
+      }
+
+      dispatch(checkoutActions.checkoutPaymentStarted());
+
+      try {
+        const response = await apiClient.createTransaction(request);
+        const status = mapTransactionStatus(response.status);
+
+        dispatch(
+          transactionActions.recordTransaction({
+            transactionId: String(response.id),
+            number: response.reference,
+            itemCount,
+            total: response.totalAmount,
+            status,
+            createdAt: response.createAt,
+            updatedAt: response.updateAt,
+            customer: {
+              customerName: payment.cardHolder,
+              customerEmail: `customer-${backendConfig.customerId}@configured.local`,
+              documentId: String(backendConfig.customerId),
+              paymentToken: response.bankTransactionId ?? 'not-provided',
+              paymentReference: response.reference,
+            },
+          }),
+        );
+
+        if (status === 'completed') {
+          dispatch(cartActions.cartReset());
+        }
+
+        dispatch(
+          checkoutActions.checkoutCompleted({
+            transactionNumber: response.reference,
+          }),
+        );
+      } catch {
+        dispatch(
+          checkoutActions.checkoutPaymentFailed({
+            error: translate('checkout.paymentError'),
+          }),
+        );
+      }
+    };
+}
+
+export const submitCheckout = createCheckoutWorkflow();

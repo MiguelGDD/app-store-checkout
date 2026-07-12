@@ -1,12 +1,9 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, radius, spacing, typography } from '../theme';
+import { colors, fonts, radius, spacing, typography } from '../theme';
 import type { Product } from '../types';
-import { formatCurrency, formatQuantity } from '../utils/format';
-import { useI18n } from '../i18n';
-import { useResponsiveLayout } from '../utils/responsive';
-import { AppCard } from './AppCard';
-import { Pill } from './Pill';
+import { formatCurrency } from '../utils/format';
+import { ProductArtwork } from './ProductArtwork';
 
 type CartLineItemProps = {
   product: Product;
@@ -21,156 +18,110 @@ export function CartLineItem({
   onIncrement,
   onDecrement,
 }: CartLineItemProps) {
-  const { t } = useI18n();
-  const layout = useResponsiveLayout();
-  const controlWidth = layout.isCompact ? 96 : 108;
-  const controlButtonSize = layout.isCompact ? 32 : 34;
-  const stockSize = layout.isCompact ? 11 : typography.small;
-  const quantitySize = layout.isCompact ? 11 : typography.small;
-
   return (
-    <AppCard style={styles.card}>
-      <View style={styles.row}>
-        <View style={styles.copy}>
-          <View style={styles.badgeRow}>
-            <Pill label={product.badge} tone="neutral" />
-            <Text style={[styles.stock, { fontSize: stockSize }]}>
-              {t('cartLineItem.stock', { count: product.stock })}
-            </Text>
-          </View>
-          <Text style={styles.name}>{product.name}</Text>
-          <Text style={styles.description}>{product.description}</Text>
-          <Text style={[styles.quantity, { fontSize: quantitySize }]}>
-            {formatQuantity(quantity)}
-          </Text>
-        </View>
-        <View style={[styles.controls, { width: controlWidth }]}>
+    <View style={styles.card}>
+      <View style={styles.artwork}>
+        <ProductArtwork product={product} compact />
+      </View>
+      <View style={styles.copy}>
+        <Text style={styles.name} numberOfLines={1}>
+          {product.name}
+        </Text>
+        <Text style={styles.price}>{formatCurrency(product.price)}</Text>
+        <View style={styles.controls}>
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel="Quitar una unidad"
             onPress={onDecrement}
-            style={({ pressed }) => [
-              styles.controlButton,
-              { width: controlButtonSize, height: controlButtonSize },
-              pressed && styles.controlButtonPressed,
-            ]}
+            style={({ pressed }) => [styles.control, pressed && styles.pressed]}
           >
             <Text style={styles.controlLabel}>-</Text>
           </Pressable>
-          <Text style={styles.count}>{quantity}</Text>
+          <Text style={styles.quantity}>{quantity}</Text>
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel="Agregar una unidad"
             onPress={onIncrement}
             style={({ pressed }) => [
-              styles.controlButton,
-              styles.controlButtonAccent,
-              { width: controlButtonSize, height: controlButtonSize },
-              pressed && styles.controlButtonPressed,
+              styles.control,
+              styles.controlPrimary,
+              pressed && styles.pressed,
             ]}
           >
-            <Text style={[styles.controlLabel, styles.controlLabelAccent]}>+</Text>
+            <Text style={[styles.controlLabel, styles.controlLabelPrimary]}>
+              +
+            </Text>
           </Pressable>
         </View>
       </View>
-      <View style={styles.footer}>
-        <Text style={styles.price}>{formatCurrency(product.price)}</Text>
-        <View style={[styles.accentBar, { backgroundColor: product.accent }]} />
-      </View>
-    </AppCard>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    gap: spacing.md,
-  },
-  row: {
     flexDirection: 'row',
     gap: spacing.md,
-  },
-  copy: {
-    flex: 1,
-    minWidth: 0,
-    gap: spacing.xs,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-  },
-  stock: {
-    color: colors.textSoft,
-    fontSize: typography.small,
-    fontWeight: '700',
-  },
-  name: {
-    color: colors.text,
-    fontSize: typography.body,
-    fontWeight: '800',
-    lineHeight: 22,
-  },
-  description: {
-    color: colors.textMuted,
-    fontSize: typography.small,
-    lineHeight: 18,
-  },
-  quantity: {
-    color: colors.textSoft,
-    fontSize: typography.small,
-    fontWeight: '700',
-    marginTop: 2,
-  },
-  controls: {
-    width: 108,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.xs,
-  },
-  controlButton: {
-    width: 34,
-    height: 34,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surfaceHighlight,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  controlButtonAccent: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primaryStrong,
+  artwork: {
+    width: 92,
   },
-  controlButtonPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.97 }],
+  copy: {
+    flex: 1,
+    justifyContent: 'space-between',
+    gap: spacing.xs,
+  },
+  name: {
+    color: colors.text,
+    fontFamily: fonts.display,
+    fontSize: typography.body,
+    fontWeight: '700',
+  },
+  price: {
+    color: colors.primary,
+    fontSize: typography.small,
+    fontWeight: '800',
+  },
+  controls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  control: {
+    width: 30,
+    height: 30,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  controlPrimary: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  pressed: {
+    opacity: 0.75,
   },
   controlLabel: {
     color: colors.text,
-    fontSize: typography.subtitle,
+    fontSize: 18,
     fontWeight: '800',
-    marginTop: -1,
   },
-  controlLabelAccent: {
-    color: colors.backgroundDeep,
+  controlLabelPrimary: {
+    color: colors.surface,
   },
-  count: {
-    minWidth: 24,
+  quantity: {
+    minWidth: 20,
+    color: colors.text,
     textAlign: 'center',
-    color: colors.text,
     fontSize: typography.body,
     fontWeight: '800',
-  },
-  footer: {
-    gap: spacing.xs,
-  },
-  price: {
-    color: colors.text,
-    fontSize: typography.body,
-    fontWeight: '800',
-  },
-  accentBar: {
-    height: 3,
-    borderRadius: 999,
   },
 });

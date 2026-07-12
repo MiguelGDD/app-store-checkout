@@ -8,14 +8,17 @@ import { HomeScreen } from './screens/HomeScreen';
 import { CatalogScreen } from './screens/CatalogScreen';
 import { CartScreen } from './screens/CartScreen';
 import { CheckoutScreen } from './screens/CheckoutScreen';
+import { HistoryScreen } from './screens/HistoryScreen';
 import { ProductDetailScreen } from './screens/ProductDetailScreen';
 import type {
   CatalogSource,
   CatalogStatus,
+  CardPaymentDetails,
   OrderSummary,
   Product,
   ResponsiveLayout,
   ScreenId,
+  TransactionSummary,
 } from './types';
 import { useResponsiveLayout } from './utils/responsive';
 import { useAppDispatch, useAppSelector } from './store/hooks';
@@ -32,9 +35,13 @@ import {
   selectCartTotal,
   selectCheckoutActiveScreen,
   selectCheckoutFlowIndex,
+  selectCheckoutIsSubmitting,
+  selectCheckoutPaymentError,
   selectLatestOrderSummary,
   selectLatestTransactionStatus,
   selectSelectedProduct,
+  selectTransactionHistory,
+  selectTransactionHydrated,
 } from './store/selectors';
 import { checkoutActions } from './store/checkout/checkoutSlice';
 import { cartActions } from './store/cart/cartSlice';
@@ -61,15 +68,19 @@ type ActiveScreenRendererProps = {
   cartTotal: number;
   latestOrder: OrderSummary | null;
   latestTransactionStatus: ReturnType<typeof selectLatestTransactionStatus>;
+  transactionHistory: TransactionSummary[];
+  transactionHydrated: boolean;
   selectedProduct: Product | null;
   selectedProductQuantity: number;
   flowIndex: number;
+  isSubmitting: boolean;
+  paymentError: string | null;
   navigate: (screen: ScreenId) => void;
   addToCart: (productId: string) => void;
   decrementItem: (productId: string) => void;
   openProductDetail: (productId: string) => void;
   retryCatalogSync: () => void;
-  placeOrder: () => void;
+  placeOrder: (payment: CardPaymentDetails) => void;
 };
 
 function renderActiveScreen(
@@ -149,8 +160,21 @@ function renderActiveScreen(
         total={props.cartTotal}
         lastOrder={props.latestOrder}
         flowIndex={props.flowIndex}
+        isSubmitting={props.isSubmitting}
+        paymentError={props.paymentError}
         onNavigate={props.navigate}
         onPlaceOrder={props.placeOrder}
+      />
+    );
+  }
+
+  if (activeScreen === 'history') {
+    return (
+      <HistoryScreen
+        layout={props.layout}
+        transactions={props.transactionHistory}
+        hydrated={props.transactionHydrated}
+        onNavigate={props.navigate}
       />
     );
   }
@@ -182,8 +206,12 @@ export default function AppShell() {
   const cartTotal = useAppSelector(selectCartTotal);
   const latestOrder = useAppSelector(selectLatestOrderSummary);
   const latestTransactionStatus = useAppSelector(selectLatestTransactionStatus);
+  const transactionHistory = useAppSelector(selectTransactionHistory);
+  const transactionHydrated = useAppSelector(selectTransactionHydrated);
   const selectedProduct = useAppSelector(selectSelectedProduct);
   const flowIndex = useAppSelector(selectCheckoutFlowIndex);
+  const isSubmitting = useAppSelector(selectCheckoutIsSubmitting);
+  const paymentError = useAppSelector(selectCheckoutPaymentError);
   const selectedProductQuantity = selectedProduct
     ? cartQuantities[selectedProduct.id] ?? 0
     : 0;
@@ -192,7 +220,7 @@ export default function AppShell() {
     let cancelled = false;
 
     loadEncryptedTransactionSnapshot()
-      .then((snapshot) => {
+      .then(snapshot => {
         if (!cancelled) {
           dispatch(transactionActions.hydrateTransactions(snapshot));
         }
@@ -232,8 +260,8 @@ export default function AppShell() {
     dispatch(checkoutActions.openProductDetail({ productId }));
   };
 
-  const placeOrder = () => {
-    dispatch(submitCheckout());
+  const placeOrder = async (payment: CardPaymentDetails) => {
+    await dispatch(submitCheckout(payment));
   };
   const activeScreenContent = renderActiveScreen(activeScreen, {
     layout,
@@ -248,9 +276,13 @@ export default function AppShell() {
     cartTotal,
     latestOrder,
     latestTransactionStatus,
+    transactionHistory,
+    transactionHydrated,
     selectedProduct,
     selectedProductQuantity,
     flowIndex,
+    isSubmitting,
+    paymentError,
     navigate,
     addToCart,
     decrementItem,
@@ -261,15 +293,12 @@ export default function AppShell() {
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       <View pointerEvents="none" style={styles.backdrop}>
         <View style={styles.glowOne} />
         <View style={styles.glowTwo} />
-        <View style={styles.glowThree} />
       </View>
-      <View style={styles.screen}>
-        {activeScreenContent}
-      </View>
+      <View style={styles.screen}>{activeScreenContent}</View>
 
       <TabBar
         activeTab={activeTab}
@@ -291,30 +320,21 @@ const styles = StyleSheet.create({
   },
   glowOne: {
     position: 'absolute',
-    top: -80,
-    left: -60,
-    width: 220,
-    height: 220,
-    borderRadius: 220,
-    backgroundColor: 'rgba(255, 138, 61, 0.14)',
+    top: -130,
+    right: -100,
+    width: 300,
+    height: 300,
+    borderRadius: 300,
+    backgroundColor: '#E2ECE5',
   },
   glowTwo: {
     position: 'absolute',
-    top: 100,
-    right: -90,
-    width: 260,
-    height: 260,
-    borderRadius: 260,
-    backgroundColor: 'rgba(57, 208, 179, 0.10)',
-  },
-  glowThree: {
-    position: 'absolute',
-    bottom: 50,
-    left: '18%',
-    width: 180,
-    height: 180,
-    borderRadius: 180,
-    backgroundColor: 'rgba(123, 167, 255, 0.12)',
+    bottom: 40,
+    left: -120,
+    width: 280,
+    height: 280,
+    borderRadius: 280,
+    backgroundColor: '#F1E2D8',
   },
   screen: {
     flex: 1,

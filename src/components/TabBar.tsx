@@ -34,15 +34,15 @@ export function TabBar({ activeTab, cartCount, onNavigate }: TabBarProps) {
   const badgeSize = layout.isCompact ? 8 : 9;
   const indicatorWidth = layout.isCompact ? 20 : 24;
   const tabs: Array<{ key: TabId; label: string }> = [
-    { key: 'home', label: t('tab.home') },
     { key: 'catalog', label: t('tab.catalog') },
     { key: 'cart', label: t('tab.cart') },
     { key: 'checkout', label: t('tab.checkout') },
+    { key: 'history', label: t('tab.history') },
   ];
 
   return (
     <View style={[styles.shell, shellStyle]}>
-      {tabs.map((tab) => {
+      {tabs.map(tab => {
         const isActive = tab.key === activeTab;
         const showBadge = tab.key === 'cart' && cartCount > 0;
 
@@ -74,7 +74,9 @@ export function TabBar({ activeTab, cartCount, onNavigate }: TabBarProps) {
               </View>
             ) : null}
             {isActive ? (
-              <View style={[styles.activeIndicator, { width: indicatorWidth }]} />
+              <View
+                style={[styles.activeIndicator, { width: indicatorWidth }]}
+              />
             ) : null}
           </Pressable>
         );
@@ -87,14 +89,14 @@ const styles = StyleSheet.create({
   shell: {
     position: 'absolute',
     flexDirection: 'row',
-    backgroundColor: 'rgba(10, 15, 28, 0.96)',
+    backgroundColor: 'rgba(255, 255, 255, 0.97)',
     borderWidth: 1,
     borderColor: colors.border,
     shadowColor: '#000',
-    shadowOpacity: 0.32,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 6,
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 5,
   },
   tab: {
     flex: 1,
@@ -116,7 +118,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   labelActive: {
-    color: colors.text,
+    color: colors.primary,
   },
   badge: {
     position: 'absolute',
@@ -131,7 +133,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   badgeLabel: {
-    color: colors.backgroundDeep,
+    color: colors.surface,
     fontWeight: '800',
   },
   activeIndicator: {

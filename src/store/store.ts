@@ -32,7 +32,7 @@ export const store = configureStore({
     checkout: checkoutReducer,
     transaction: transactionReducer,
   },
-  middleware: (getDefaultMiddleware) =>
+  middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: ['persist/PERSIST'],
@@ -43,7 +43,7 @@ export const store = configureStore({
 export type AppStore = typeof store;
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
-export type AppThunk = (
+export type AppThunk<ReturnValue = void> = (
   dispatch: AppDispatch,
   getState: () => RootState,
-) => void;
+) => ReturnValue;

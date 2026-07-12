@@ -1,126 +1,187 @@
 # Store Checkout
 
-React Native app shell for the mobile checkout challenge.
+Aplicacion movil en React Native para un flujo de compra con catalogo, carrito,
+onboarding de pago con tarjeta y confirmacion de transaccion.
 
-## What is in this branch
+## Funcionalidad
 
-- Responsive shell that stays usable on iPhone SE sized screens.
-- Custom navigation without an external navigation library.
-- Six screens in the flow: home, catalog, product detail, cart, checkout and confirmation.
-- Reusable UI pieces for cards, buttons, stepper, empty states and tab navigation.
-- Redux store with Flux-style slices for catalog, cart, checkout and transaction.
-- Sensitive transaction data is encrypted before it is persisted to AsyncStorage.
-- Remote catalog sync through a centralized backend API client with loading,
-  success and error states.
-- Android release build is configured and generates a ready-to-install APK.
+- Catalogo sincronizado desde el backend desplegado.
+- Detalle de producto y control de cantidades.
+- Carrito con calculo de subtotal y total.
+- Formulario de tarjeta con validacion de titular, numero, vencimiento y CVC.
+- Estado de transaccion pendiente, completada o fallida.
+- Persistencia cifrada del resumen de transacciones en `AsyncStorage`.
+- Interfaz responsive para telefonos compactos y pantallas grandes.
+- Ilustraciones locales construidas con primitivas nativas, sin descargas remotas.
 
-## Requirements
+## Stack
 
-- Node.js 22 or newer.
-- npm 10 or newer.
-- Android Studio or an Android device/emulator for Android runs.
-- Xcode and CocoaPods only if you want to run iOS on macOS.
+- React Native 0.86
+- React 19
+- TypeScript
+- Redux Toolkit
+- AsyncStorage
+- Jest
 
-## Install
+## Requisitos
+
+- Node.js 22 o superior.
+- npm 10 o superior.
+- Android Studio con Android SDK Platform 36.
+- Android Build Tools 36.0.0.
+- NDK 27.1.12297006.
+- JDK 17 o superior. Se puede usar el JDK incluido en Android Studio.
+- Para iOS: Xcode y CocoaPods.
+
+## Instalacion
 
 ```bash
 npm install
+cp .env.example .env
 ```
 
-## Run locally
+Configura en `.env` la variable `BACKEND_BASE_URL` con la URL del backend, sin
+una barra final.
 
-Start Metro:
+En Android, crea `android/local.properties` si Android Studio no lo genero:
+
+```properties
+sdk.dir=/Users/TU_USUARIO/Library/Android/sdk
+```
+
+Este archivo es local y esta ignorado por Git.
+
+## Ejecutar en Android
+
+1. Abre un emulador desde Android Studio.
+2. Inicia Metro:
 
 ```bash
 npm start
 ```
 
-Run Android:
+3. En otra terminal ejecuta:
 
 ```bash
 npm run android
 ```
 
-Run iOS on macOS:
+Si el emulador no encuentra Metro:
 
 ```bash
+adb reverse tcp:8081 tcp:8081
+```
+
+## Ejecutar en iOS
+
+Instala los Pods y abre el workspace generado:
+
+```bash
+cd ios
 bundle install
 bundle exec pod install
+cd ..
 npm run ios
 ```
 
-## Quality checks
+## Configuracion del backend
 
-Run unit tests:
+La URL se lee desde `BACKEND_BASE_URL` en el archivo local `.env`. Babel la
+inyecta en el bundle mediante `react-native-dotenv`; no es necesario configurar
+Android e iOS por separado. El archivo `.env` esta ignorado por Git y el
+repositorio incluye `.env.example` como plantilla.
 
-```bash
-npm test -- --runInBand
+La API key de desarrollo y los demas valores no sensibles estan centralizados
+en:
+
+```text
+src/infrastructure/backend/backendConfig.ts
 ```
 
-Run test coverage:
+Despues de cambiar `.env`, reinicia Metro limpiando la cache:
 
 ```bash
-npm run test:coverage
+npm start -- --reset-cache
 ```
 
-Run lint:
+El cliente agrega el header `x-api-key` a las solicitudes. La clave incluida en
+una aplicacion movil no debe considerarse un secreto, porque puede extraerse del
+APK o IPA. Para produccion se necesita HTTPS, autenticacion por usuario, tokens
+de corta duracion y rate limiting.
+
+El despliegue actual usa HTTP y credenciales sandbox. No se deben introducir
+tarjetas reales hasta publicar la API detras de HTTPS.
+
+El catalogo consume:
+
+```text
+GET /products
+```
+
+El checkout envia el carrito y la tarjeta al backend:
+
+```text
+POST /transactions
+```
+
+La respuesta del backend es la fuente de verdad para el total, la referencia y
+el estado final. El carrito se limpia solamente cuando el estado recibido es
+`APPROVED`; en pagos rechazados o errores de red se conserva para reintentar.
+
+El repositorio backend hermano gestiona productos, tokenizacion de tarjeta,
+transacciones con el proveedor de pagos y asignacion de entregas.
+
+## Flujo
+
+1. La aplicacion abre directamente en el catalogo.
+2. Revisa un producto y lo agrega al carrito.
+3. Ajusta cantidades y confirma el total.
+4. Completa titular, tarjeta, vencimiento y CVC.
+5. La aplicacion crea la transaccion y muestra el resultado.
+
+Los datos introducidos en el formulario de tarjeta no se guardan en
+`AsyncStorage`. Solo se persiste el resumen cifrado de la transaccion.
+
+## Imagenes y rendimiento
+
+Las tarjetas usan `ProductArtwork`, una ilustracion local hecha con vistas
+nativas. Esto evita depender de hosts externos, elimina saltos de layout y hace
+que el contenido visual aparezca junto con el primer render.
+
+## Calidad
 
 ```bash
 npm run lint
-```
-
-Run TypeScript typecheck:
-
-```bash
 npx tsc --noEmit
+npm test -- --runInBand
+npm run test:coverage
 ```
 
-## Android release
+La cobertura global minima configurada es 80%.
 
-Build the Android release APK from the `android` folder:
+## Build Android
 
 ```bash
 cd android
 ./gradlew assembleRelease
 ```
 
-On Windows:
-
-```powershell
-cd android
-.\gradlew assembleRelease
-```
-
-The APK is generated at:
+El APK se genera en:
 
 ```text
 android/app/build/outputs/apk/release/app-release.apk
 ```
 
-Current build state:
+La configuracion de firma incluida es apropiada para pruebas. Una publicacion
+real debe usar un keystore de produccion almacenado fuera del repositorio.
 
-- The release APK is generated successfully in the local environment.
-- The release build uses the repository signing setup already present in `android/app/build.gradle`.
-- If you need to rebuild after changing native dependencies, run `./gradlew clean assembleRelease`.
+## Estructura
 
-## Coverage
-
-Current coverage for this branch:
-
-- Statements: 91.7%
-- Branches: 83.33%
-- Functions: 81.87%
-- Lines: 91.47%
-
-The coverage target is enforced through Jest so regressions below 80% fail locally.
-
-## Notes
-
-- The catalog, cart and checkout flow are currently powered by demo data.
-- The catalog now syncs from the deployed backend by default. If you need to
-  point the app to a different backend, update
-  [`src/infrastructure/backend/backendConfig.ts`](./src/infrastructure/backend/backendConfig.ts).
-- The checkout workflow creates a pending transaction before the final result
-  screen resolves the order status.
-- The Redux slices and workflow helpers are intentionally small so task 4 can
-  extend the checkout path without rewriting the shell navigation.
+```text
+src/components/                 Componentes visuales reutilizables
+src/screens/                    Pantallas del flujo
+src/store/                      Redux, workflows y persistencia
+src/infrastructure/backend/     Cliente y mapeo de la API
+src/i18n/                       Textos de interfaz
+src/theme.ts                    Colores, tipografia y espaciado
+```

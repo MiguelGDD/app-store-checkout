@@ -1,19 +1,16 @@
 import { StyleSheet, Text, View } from 'react-native';
-import type { StyleProp, TextStyle } from 'react-native';
 
-import { flowSteps } from '../data/demo';
-import { colors, spacing, typography } from '../theme';
+import { colors, fonts, spacing, typography } from '../theme';
 import type { Product, ResponsiveLayout, ScreenId } from '../types';
-import { formatCurrency, formatQuantity } from '../utils/format';
+import { formatCurrency } from '../utils/format';
 import { AppButton } from '../components/AppButton';
 import { AppCard } from '../components/AppCard';
 import { EmptyState } from '../components/EmptyState';
-import { FlowStepper } from '../components/FlowStepper';
 import { Pill } from '../components/Pill';
+import { ProductArtwork } from '../components/ProductArtwork';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { SectionHeader } from '../components/SectionHeader';
 import { useI18n } from '../i18n';
-import { resolveResponsiveChoice } from '../utils/responsive';
 
 type ProductDetailScreenProps = {
   layout: ResponsiveLayout;
@@ -28,7 +25,6 @@ export function ProductDetailScreen({
   layout,
   product,
   quantityInCart,
-  flowIndex,
   onNavigate,
   onAddToCart,
 }: ProductDetailScreenProps) {
@@ -37,20 +33,12 @@ export function ProductDetailScreen({
   if (!product) {
     return (
       <ScreenFrame layout={layout}>
-        <View style={styles.stack}>
-          <SectionHeader
-            eyebrow={t('productDetail.missingEyebrow')}
-            title={t('productDetail.missingTitle')}
-            description={t('productDetail.missingDescription')}
-          />
-
-          <EmptyState
-            title={t('common.productMissing')}
-            description={t('productDetail.missingDescription')}
-            actionLabel={t('productDetail.missingAction')}
-            onAction={() => onNavigate('catalog')}
-          />
-        </View>
+        <EmptyState
+          title={t('productDetail.missingTitle')}
+          description={t('productDetail.missingDescription')}
+          actionLabel={t('productDetail.missingAction')}
+          onAction={() => onNavigate('catalog')}
+        />
       </ScreenFrame>
     );
   }
@@ -59,11 +47,6 @@ export function ProductDetailScreen({
     quantityInCart > 0
       ? t('productDetail.addOneMore', { count: quantityInCart })
       : t('productDetail.addToCart');
-  const priceLayoutStyle: StyleProp<TextStyle> = resolveResponsiveChoice(layout, {
-    compact: styles.priceCompact,
-    wide: styles.priceWide,
-    defaultValue: null,
-  });
 
   return (
     <ScreenFrame layout={layout}>
@@ -71,62 +54,38 @@ export function ProductDetailScreen({
         <SectionHeader
           eyebrow={t('productDetail.eyebrow')}
           title={product.name}
-          description={t('productDetail.description')}
         />
 
-        <AppCard tone="hero" style={styles.heroCard}>
-          <View style={styles.heroTopRow}>
+        <AppCard tone="hero" style={styles.card}>
+          <ProductArtwork product={product} />
+          <View style={styles.metaRow}>
             <Pill label={product.badge} tone="primary" />
-            <Pill label={t('common.inStock', { count: product.stock })} tone="neutral" />
+            <Text style={styles.stock}>
+              {t('common.inStock', { count: product.stock })}
+            </Text>
           </View>
-
-          <Text
-            style={[
-              styles.price,
-              priceLayoutStyle,
-            ]}
-          >
-            {formatCurrency(product.price)}
-          </Text>
+          <Text style={styles.price}>{formatCurrency(product.price)}</Text>
           <Text style={styles.description}>{product.description}</Text>
-          <Text style={styles.meta}>
-            {t('productDetail.inCart', { quantity: formatQuantity(quantityInCart) })}
-          </Text>
-
           <View style={styles.actions}>
             <AppButton
               label={actionLabel}
               onPress={() => onAddToCart(product.id)}
               fullWidth
-              compact
             />
             <AppButton
-              label={t('productDetail.openCart')}
-              onPress={() => onNavigate('cart')}
+              label={
+                quantityInCart > 0
+                  ? t('productDetail.openCart')
+                  : t('productDetail.backToCatalog')
+              }
+              onPress={() =>
+                onNavigate(quantityInCart > 0 ? 'cart' : 'catalog')
+              }
               variant="secondary"
               compact
               fullWidth
             />
-            <AppButton
-              label={t('productDetail.backToCatalog')}
-              onPress={() => onNavigate('catalog')}
-              variant="ghost"
-              compact
-              fullWidth
-            />
           </View>
-
-          <View style={[styles.accentBar, { backgroundColor: product.accent }]} />
-        </AppCard>
-
-        <AppCard style={styles.flowCard}>
-          <Text style={styles.sectionLabel}>{t('common.flowProgress')}</Text>
-          <FlowStepper steps={flowSteps} activeIndex={flowIndex} />
-        </AppCard>
-
-        <AppCard style={styles.noteCard}>
-          <Text style={styles.noteTitle}>{t('productDetail.noteTitle')}</Text>
-          <Text style={styles.noteText}>{t('productDetail.noteText')}</Text>
         </AppCard>
       </View>
     </ScreenFrame>
@@ -137,73 +96,33 @@ const styles = StyleSheet.create({
   stack: {
     gap: spacing.lg,
   },
-  heroCard: {
+  card: {
     gap: spacing.md,
   },
-  heroTopRow: {
+  metaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: spacing.sm,
   },
+  stock: {
+    color: colors.textMuted,
+    fontSize: typography.small,
+    fontWeight: '700',
+  },
   price: {
-    color: colors.text,
-    fontSize: typography.hero,
-    lineHeight: 36,
-    fontWeight: '900',
-    letterSpacing: -0.7,
-  },
-  priceCompact: {
-    fontSize: 26,
-    lineHeight: 31,
-  },
-  priceWide: {
-    fontSize: 34,
-    lineHeight: 40,
+    color: colors.primary,
+    fontFamily: fonts.display,
+    fontSize: typography.title,
+    fontWeight: '700',
   },
   description: {
     color: colors.textMuted,
     fontSize: typography.body,
     lineHeight: 22,
   },
-  meta: {
-    color: colors.textSoft,
-    fontSize: typography.small,
-    fontWeight: '700',
-    letterSpacing: 0.2,
-    textTransform: 'uppercase',
-  },
   actions: {
     gap: spacing.sm,
     marginTop: spacing.xs,
-  },
-  accentBar: {
-    height: 3,
-    width: '100%',
-    marginTop: spacing.xs,
-    borderRadius: 999,
-  },
-  flowCard: {
-    gap: spacing.md,
-  },
-  sectionLabel: {
-    color: colors.textSoft,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    fontSize: typography.micro,
-    fontWeight: '800',
-  },
-  noteCard: {
-    gap: spacing.sm,
-  },
-  noteTitle: {
-    color: colors.text,
-    fontSize: typography.body,
-    fontWeight: '800',
-  },
-  noteText: {
-    color: colors.textMuted,
-    fontSize: typography.body,
-    lineHeight: 21,
   },
 });

@@ -11,14 +11,42 @@ import {
 } from '../src/store/selectors';
 import { store } from '../src/store/store';
 import { transactionActions } from '../src/store/transaction/transactionSlice';
-import { submitCheckout } from '../src/store/workflows/checkoutWorkflow';
+import { createCheckoutWorkflow } from '../src/store/workflows/checkoutWorkflow';
 import { products } from '../src/data/demo';
+import type { CardPaymentDetails } from '../src/types';
+
+const backendProducts = products.slice(0, 2).map((product, index) => ({
+  ...product,
+  id: String(index + 1),
+}));
+
+const payment: CardPaymentDetails = {
+  number: '4242 4242 4242 4242',
+  expMonth: '12',
+  expYear: '29',
+  cvc: '123',
+  cardHolder: 'Ana Perez',
+};
+
+function createBackendTransaction(status: 'APPROVED' | 'DECLINED') {
+  return {
+    id: 7,
+    reference: 'backend-reference',
+    totalAmount: backendProducts[0].price + backendProducts[1].price,
+    baseFee: backendProducts[0].price + backendProducts[1].price,
+    deliveryFee: 0,
+    status,
+    bankTransactionId: 'bank-transaction-7',
+    createAt: '2026-07-12T00:00:00.000Z',
+    updateAt: '2026-07-12T00:01:00.000Z',
+  } as const;
+}
 
 function resetStore() {
   store.dispatch(cartActions.cartReset());
   store.dispatch(checkoutActions.checkoutReset());
   store.dispatch(transactionActions.clearTransactions());
-  store.dispatch(catalogActions.replaceCatalog(products));
+  store.dispatch(catalogActions.replaceCatalog(backendProducts));
 }
 
 describe('redux workflow', () => {
@@ -56,37 +84,90 @@ describe('redux workflow', () => {
     });
   });
 
-  test('submits a checkout flow and clears the cart', async () => {
-    store.dispatch(cartActions.itemAdded({ productId: products[0].id }));
-    store.dispatch(cartActions.itemAdded({ productId: products[1].id }));
+  test('submits an approved backend checkout and clears the cart', async () => {
+    const apiClient = {
+      createTransaction: jest
+        .fn()
+        .mockResolvedValue(createBackendTransaction('APPROVED')),
+    };
+    const submitCheckout = createCheckoutWorkflow(apiClient);
+    store.dispatch(cartActions.itemAdded({ productId: backendProducts[0].id }));
+    store.dispatch(cartActions.itemAdded({ productId: backendProducts[1].id }));
     store.dispatch(checkoutActions.navigateTo('checkout'));
 
-    store.dispatch(submitCheckout());
+    await store.dispatch(submitCheckout(payment));
 
     const state = store.getState();
     const summary = selectLatestOrderSummary(state);
 
+    expect(apiClient.createTransaction).toHaveBeenCalledWith({
+      customerId: 1,
+      deliveryFee: 0,
+      items: [
+        { productId: 1, quantity: 1 },
+        { productId: 2, quantity: 1 },
+      ],
+      payment: {
+        ...payment,
+        number: '4242424242424242',
+      },
+    });
     expect(selectCartCount(state)).toBe(0);
     expect(state.checkout.activeScreen).toBe('confirmation');
+    expect(state.checkout.isSubmitting).toBe(false);
     expect(selectLatestTransactionStatus(state)).toBe('completed');
-    expect(summary?.number).toBe('SC-001');
+    expect(summary?.number).toBe('backend-reference');
     expect(summary?.itemCount).toBe(2);
     expect(summary?.total).toBe(
-      products[0].price + products[1].price,
+      backendProducts[0].price + backendProducts[1].price,
     );
+  });
+
+  test('keeps the cart when the backend declines the payment', async () => {
+    const submitCheckout = createCheckoutWorkflow({
+      createTransaction: jest
+        .fn()
+        .mockResolvedValue(createBackendTransaction('DECLINED')),
+    });
+    store.dispatch(cartActions.itemAdded({ productId: backendProducts[0].id }));
+    store.dispatch(checkoutActions.navigateTo('checkout'));
+
+    await store.dispatch(submitCheckout(payment));
+
+    const state = store.getState();
+    expect(selectCartCount(state)).toBe(1);
+    expect(state.checkout.activeScreen).toBe('confirmation');
+    expect(selectLatestTransactionStatus(state)).toBe('failed');
+  });
+
+  test('shows an error and preserves the cart when the API fails', async () => {
+    const submitCheckout = createCheckoutWorkflow({
+      createTransaction: jest.fn().mockRejectedValue(new Error('offline')),
+    });
+    store.dispatch(cartActions.itemAdded({ productId: backendProducts[0].id }));
+    store.dispatch(checkoutActions.navigateTo('checkout'));
+
+    await store.dispatch(submitCheckout(payment));
+
+    const state = store.getState();
+    expect(selectCartCount(state)).toBe(1);
+    expect(state.checkout.activeScreen).toBe('checkout');
+    expect(state.checkout.isSubmitting).toBe(false);
+    expect(state.checkout.paymentError).toContain('No pudimos procesar');
+    expect(selectLatestTransactionStatus(state)).toBeNull();
   });
 
   test('opens product detail and clears the selection when leaving it', () => {
     store.dispatch(
-      checkoutActions.openProductDetail({ productId: products[0].id }),
+      checkoutActions.openProductDetail({ productId: backendProducts[0].id }),
     );
 
     let state = store.getState();
 
     expect(state.checkout.activeScreen).toBe('productDetail');
-    expect(state.checkout.selectedProductId).toBe(products[0].id);
+    expect(state.checkout.selectedProductId).toBe(backendProducts[0].id);
     expect(selectActiveTab(state)).toBe('catalog');
-    expect(selectSelectedProduct(state)?.id).toBe(products[0].id);
+    expect(selectSelectedProduct(state)?.id).toBe(backendProducts[0].id);
 
     store.dispatch(checkoutActions.navigateTo('cart'));
     state = store.getState();
@@ -94,11 +175,14 @@ describe('redux workflow', () => {
     expect(state.checkout.selectedProductId).toBeNull();
   });
 
-  test('keeps the user on checkout when there are no items', () => {
-    store.dispatch(checkoutActions.navigateTo('home'));
+  test('keeps the user on checkout when there are no items', async () => {
+    const apiClient = { createTransaction: jest.fn() };
+    const submitCheckout = createCheckoutWorkflow(apiClient);
+    store.dispatch(checkoutActions.navigateTo('catalog'));
 
-    store.dispatch(submitCheckout());
+    await store.dispatch(submitCheckout(payment));
 
+    expect(apiClient.createTransaction).not.toHaveBeenCalled();
     expect(store.getState().checkout.activeScreen).toBe('checkout');
   });
 });

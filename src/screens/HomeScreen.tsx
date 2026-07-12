@@ -1,12 +1,10 @@
 import { StyleSheet, Text, View } from 'react-native';
-import type { StyleProp, TextStyle } from 'react-native';
 
-import { metrics, featuredProductId, flowSteps, products as demoProducts } from '../data/demo';
-import { colors, spacing, typography } from '../theme';
+import { featuredProductId, products as demoProducts } from '../data/demo';
+import { colors, fonts, spacing, typography } from '../theme';
 import type {
   CatalogSource,
   CatalogStatus,
-  Metric,
   OrderSummary,
   Product,
   ResponsiveLayout,
@@ -15,14 +13,10 @@ import type {
 import { formatCurrency, formatQuantity } from '../utils/format';
 import { AppButton } from '../components/AppButton';
 import { AppCard } from '../components/AppCard';
-import { BackendSyncCard } from '../components/BackendSyncCard';
-import { FlowStepper } from '../components/FlowStepper';
-import { MetricCard } from '../components/MetricCard';
-import { Pill } from '../components/Pill';
+import { ProductArtwork } from '../components/ProductArtwork';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { SectionHeader } from '../components/SectionHeader';
 import { useI18n } from '../i18n';
-import { resolveResponsiveChoice } from '../utils/responsive';
 
 type HomeScreenProps = {
   layout: ResponsiveLayout;
@@ -39,58 +33,19 @@ type HomeScreenProps = {
   onRetryCatalogSync: () => void;
 };
 
-const METRIC_ACCENTS = ['primary', 'secondary', 'success'] as const;
-
-function getMetricCardWidth(layout: ResponsiveLayout) {
-  if (layout.isWide) {
-    return '31%';
-  }
-
-  if (layout.isCompact) {
-    return '100%';
-  }
-
-  return '48%';
-}
-
-function getMetricAccent(index: number) {
-  return METRIC_ACCENTS[index] ?? 'success';
-}
-
 export function HomeScreen({
   layout,
   catalogItems,
-  catalogStatus,
-  catalogError,
-  catalogSource,
-  catalogLastSyncedAt,
   cartCount,
   lastOrder,
-  flowIndex,
   onNavigate,
   onOpenProduct,
-  onRetryCatalogSync,
 }: HomeScreenProps) {
   const { t } = useI18n();
   const featuredProduct =
-    catalogItems.find((product) => product.id === featuredProductId) ??
+    catalogItems.find(product => product.id === featuredProductId) ??
     catalogItems[0] ??
     demoProducts[0];
-  const metricCardWidth = getMetricCardWidth(layout);
-  const heroTitleLayoutStyle: StyleProp<TextStyle> = resolveResponsiveChoice(layout, {
-    compact: styles.heroTitleCompact,
-    wide: styles.heroTitleWide,
-    defaultValue: null,
-  });
-  const featureTitleLayoutStyle: StyleProp<TextStyle> = resolveResponsiveChoice(layout, {
-    compact: styles.featureTitleCompact,
-    wide: styles.featureTitleWide,
-    defaultValue: null,
-  });
-  const orderTitleLayoutStyle: StyleProp<TextStyle> = resolveResponsiveChoice(layout, {
-    compact: styles.orderTitleCompact,
-    defaultValue: null,
-  });
 
   return (
     <ScreenFrame layout={layout}>
@@ -102,121 +57,55 @@ export function HomeScreen({
         />
 
         <AppCard tone="hero" style={styles.heroCard}>
-          <View style={styles.heroTopRow}>
-            <Pill label={t('home.shellReady')} tone="primary" />
-            <Text style={styles.heroCount}>{formatQuantity(cartCount)}</Text>
+          <ProductArtwork product={featuredProduct} />
+          <View style={styles.heroCopy}>
+            <Text style={styles.productLabel}>
+              {t('common.featuredProduct')}
+            </Text>
+            <Text style={styles.productName}>{featuredProduct.name}</Text>
+            <Text style={styles.productPrice}>
+              {formatCurrency(featuredProduct.price)}
+            </Text>
           </View>
-          <Text
-            style={[
-              styles.heroTitle,
-              heroTitleLayoutStyle,
-            ]}
-          >
-            {t('home.heroTitle')}
-          </Text>
-          <Text style={styles.heroDescription}>{t('home.heroDescription')}</Text>
-          <View style={styles.heroButtons}>
-            <AppButton label={t('common.openCatalog')} onPress={() => onNavigate('catalog')} />
+          <View style={styles.actions}>
+            <AppButton
+              label={t('common.openCatalog')}
+              onPress={() => onNavigate('catalog')}
+              style={styles.action}
+            />
+            <AppButton
+              label={t('common.viewDetail')}
+              onPress={() => onOpenProduct(featuredProduct.id)}
+              variant="secondary"
+              compact
+              style={styles.action}
+            />
+          </View>
+        </AppCard>
+
+        {cartCount > 0 ? (
+          <AppCard style={styles.compactCard}>
+            <View style={styles.compactCopy}>
+              <Text style={styles.compactTitle}>{t('home.cartReady')}</Text>
+              <Text style={styles.compactDescription}>
+                {formatQuantity(cartCount)}
+              </Text>
+            </View>
             <AppButton
               label={t('common.reviewCart')}
               onPress={() => onNavigate('cart')}
               variant="secondary"
               compact
             />
-          </View>
-        </AppCard>
-
-        <BackendSyncCard
-          status={catalogStatus}
-          error={catalogError}
-          source={catalogSource}
-          lastSyncedAt={catalogLastSyncedAt}
-          onRetry={onRetryCatalogSync}
-        />
-
-        <View style={styles.metricGrid}>
-          {metrics.map((metric: Metric, index) => (
-            <View
-              key={metric.label}
-              style={[
-                styles.metricItem,
-                { width: metricCardWidth },
-              ]}
-            >
-              <MetricCard
-                label={metric.label}
-                value={metric.value}
-                description={metric.description}
-                accent={getMetricAccent(index)}
-              />
-            </View>
-          ))}
-        </View>
-
-        <AppCard style={styles.featureCard}>
-          <Text style={styles.sectionLabel}>{t('common.featuredProduct')}</Text>
-          <Text
-            style={[
-              styles.featureTitle,
-              featureTitleLayoutStyle,
-            ]}
-          >
-            {featuredProduct.name}
-          </Text>
-          <Text style={styles.featureDescription}>{featuredProduct.description}</Text>
-          <View style={styles.featureFooter}>
-            <Text style={styles.featurePrice}>
-              {formatCurrency(featuredProduct.price)}
-            </Text>
-            <Text style={styles.featureStock}>
-              {t('home.featuredStock', { count: featuredProduct.stock })}
-            </Text>
-          </View>
-          <View style={styles.featureActions}>
-            <AppButton
-              label={t('common.viewDetail')}
-              onPress={() => onOpenProduct(featuredProduct.id)}
-              variant="secondary"
-              compact
-            />
-          </View>
-        </AppCard>
-
-        <AppCard style={styles.flowCard}>
-          <Text style={styles.sectionLabel}>{t('common.flowMap')}</Text>
-          <FlowStepper steps={flowSteps} activeIndex={flowIndex} />
-        </AppCard>
+          </AppCard>
+        ) : null}
 
         {lastOrder ? (
-          <AppCard style={styles.orderCard}>
-            <Text style={styles.sectionLabel}>{t('common.latestOrder')}</Text>
-            <Text
-              style={[
-                styles.orderTitle,
-                orderTitleLayoutStyle,
-              ]}
-            >
-              {t('common.orderNumber', { number: lastOrder.number })}
-            </Text>
-            <Text style={styles.orderDescription}>
-              {t('common.orderItemsProcessed', {
-                count: lastOrder.itemCount,
-                total: formatCurrency(lastOrder.total),
-              })}
-            </Text>
-            <AppButton
-              label={t('common.openConfirmation')}
-              onPress={() => onNavigate('confirmation')}
-              variant="secondary"
-              compact
-            />
-          </AppCard>
-        ) : (
-          <AppCard style={styles.orderCard}>
-            <Text style={styles.sectionLabel}>{t('home.readyCardTitle')}</Text>
-            <Text style={styles.orderDescription}>{t('home.readyCardDescription')}</Text>
-          </AppCard>
-        )}
+          <View style={styles.lastOrder}>
+            <Text style={styles.lastOrderLabel}>{t('common.latestOrder')}</Text>
+            <Text style={styles.lastOrderValue}>{lastOrder.number}</Text>
+          </View>
+        ) : null}
       </View>
     </ScreenFrame>
   );
@@ -227,123 +116,67 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   heroCard: {
-    gap: spacing.md,
+    gap: spacing.lg,
   },
-  heroTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: spacing.sm,
+  heroCopy: {
+    gap: 3,
   },
-  heroCount: {
+  productLabel: {
     color: colors.textSoft,
-    fontSize: typography.small,
-    fontWeight: '800',
-    letterSpacing: 0.7,
-    textTransform: 'uppercase',
-  },
-  heroTitle: {
-    color: colors.text,
-    fontSize: typography.hero,
-    lineHeight: 36,
-    fontWeight: '900',
-    letterSpacing: -0.7,
-  },
-  heroTitleCompact: {
-    fontSize: 26,
-    lineHeight: 31,
-  },
-  heroTitleWide: {
-    fontSize: 34,
-    lineHeight: 40,
-  },
-  heroDescription: {
-    color: colors.textMuted,
-    fontSize: typography.body,
-    lineHeight: 22,
-  },
-  heroButtons: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginTop: spacing.xs,
-  },
-  metricGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  metricItem: {
-    minWidth: 0,
-  },
-  featureCard: {
-    gap: spacing.xs,
-  },
-  sectionLabel: {
-    color: colors.textSoft,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
     fontSize: typography.micro,
     fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
-  featureTitle: {
+  productName: {
     color: colors.text,
-    fontSize: typography.title,
-    lineHeight: 30,
-    fontWeight: '800',
-  },
-  featureTitleCompact: {
-    fontSize: 22,
-    lineHeight: 28,
-  },
-  featureTitleWide: {
-    fontSize: 26,
-    lineHeight: 32,
-  },
-  featureDescription: {
-    color: colors.textMuted,
-    fontSize: typography.body,
-    lineHeight: 21,
-  },
-  featureFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  featureActions: {
-    marginTop: spacing.xs,
-  },
-  featurePrice: {
-    color: colors.text,
-    fontSize: typography.body,
-    fontWeight: '800',
-  },
-  featureStock: {
-    color: colors.textSoft,
-    fontSize: typography.small,
+    fontFamily: fonts.display,
+    fontSize: 25,
     fontWeight: '700',
   },
-  flowCard: {
-    gap: spacing.md,
-  },
-  orderCard: {
-    gap: spacing.sm,
-  },
-  orderTitle: {
-    color: colors.text,
+  productPrice: {
+    color: colors.primary,
     fontSize: typography.subtitle,
     fontWeight: '800',
-    lineHeight: 26,
   },
-  orderTitleCompact: {
-    fontSize: 16,
-    lineHeight: 22,
+  actions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
   },
-  orderDescription: {
-    color: colors.textMuted,
+  action: {
+    flex: 1,
+  },
+  compactCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  compactCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  compactTitle: {
+    color: colors.text,
     fontSize: typography.body,
-    lineHeight: 21,
+    fontWeight: '800',
+  },
+  compactDescription: {
+    color: colors.textMuted,
+    fontSize: typography.small,
+  },
+  lastOrder: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.xs,
+  },
+  lastOrderLabel: {
+    color: colors.textMuted,
+    fontSize: typography.small,
+  },
+  lastOrderValue: {
+    color: colors.text,
+    fontSize: typography.small,
+    fontWeight: '800',
   },
 });

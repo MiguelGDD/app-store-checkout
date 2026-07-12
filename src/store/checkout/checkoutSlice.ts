@@ -7,13 +7,17 @@ export type CheckoutState = {
   flowIndex: number;
   selectedProductId: string | null;
   lastCompletedTransactionNumber: string | null;
+  isSubmitting: boolean;
+  paymentError: string | null;
 };
 
 const initialState: CheckoutState = {
-  activeScreen: 'home',
+  activeScreen: 'catalog',
   flowIndex: 0,
   selectedProductId: null,
   lastCompletedTransactionNumber: null,
+  isSubmitting: false,
+  paymentError: null,
 };
 
 export function screenToFlowIndex(screen: ScreenId): number {
@@ -22,11 +26,12 @@ export function screenToFlowIndex(screen: ScreenId): number {
 
 const FLOW_INDEX_BY_SCREEN: Record<ScreenId, number> = {
   home: 0,
-  catalog: 1,
-  productDetail: 2,
-  cart: 3,
-  checkout: 4,
-  confirmation: 5,
+  catalog: 0,
+  productDetail: 1,
+  cart: 2,
+  checkout: 3,
+  history: 0,
+  confirmation: 4,
 };
 
 const checkoutSlice = createSlice({
@@ -53,12 +58,24 @@ const checkoutSlice = createSlice({
       state.flowIndex = screenToFlowIndex('confirmation');
       state.selectedProductId = null;
       state.lastCompletedTransactionNumber = action.payload.transactionNumber;
+      state.isSubmitting = false;
+      state.paymentError = null;
+    },
+    checkoutPaymentStarted(state) {
+      state.isSubmitting = true;
+      state.paymentError = null;
+    },
+    checkoutPaymentFailed(state, action: PayloadAction<{ error: string }>) {
+      state.isSubmitting = false;
+      state.paymentError = action.payload.error;
     },
     checkoutReset(state) {
-      state.activeScreen = 'home';
+      state.activeScreen = 'catalog';
       state.flowIndex = 0;
       state.selectedProductId = null;
       state.lastCompletedTransactionNumber = null;
+      state.isSubmitting = false;
+      state.paymentError = null;
     },
   },
 });

@@ -13,19 +13,34 @@ import {
 
 describe('cart reducer', () => {
   it('adds, decrements, removes and resets items', () => {
-    let state = cartReducer(undefined, cartActions.itemAdded({ productId: 'p-1', quantity: 0 }));
+    let state = cartReducer(
+      undefined,
+      cartActions.itemAdded({ productId: 'p-1', quantity: 0 }),
+    );
     expect(state.items['p-1']).toBe(1);
 
-    state = cartReducer(state, cartActions.itemAdded({ productId: 'p-1', quantity: 2 }));
+    state = cartReducer(
+      state,
+      cartActions.itemAdded({ productId: 'p-1', quantity: 2 }),
+    );
     expect(state.items['p-1']).toBe(3);
 
-    state = cartReducer(state, cartActions.itemDecremented({ productId: 'p-1' }));
+    state = cartReducer(
+      state,
+      cartActions.itemDecremented({ productId: 'p-1' }),
+    );
     expect(state.items['p-1']).toBe(2);
 
-    state = cartReducer(state, cartActions.itemDecremented({ productId: 'p-1' }));
+    state = cartReducer(
+      state,
+      cartActions.itemDecremented({ productId: 'p-1' }),
+    );
     expect(state.items['p-1']).toBe(1);
 
-    state = cartReducer(state, cartActions.itemDecremented({ productId: 'p-1' }));
+    state = cartReducer(
+      state,
+      cartActions.itemDecremented({ productId: 'p-1' }),
+    );
     expect(state.items['p-1']).toBeUndefined();
 
     state = cartReducer(state, cartActions.itemRemoved({ productId: 'p-1' }));
@@ -40,11 +55,11 @@ describe('cart reducer', () => {
 describe('checkout reducer', () => {
   it('maps screens to flow indexes and preserves product selection only when staying on product detail', () => {
     expect(screenToFlowIndex('home')).toBe(0);
-    expect(screenToFlowIndex('catalog')).toBe(1);
-    expect(screenToFlowIndex('productDetail')).toBe(2);
-    expect(screenToFlowIndex('cart')).toBe(3);
-    expect(screenToFlowIndex('checkout')).toBe(4);
-    expect(screenToFlowIndex('confirmation')).toBe(5);
+    expect(screenToFlowIndex('catalog')).toBe(0);
+    expect(screenToFlowIndex('productDetail')).toBe(1);
+    expect(screenToFlowIndex('cart')).toBe(2);
+    expect(screenToFlowIndex('checkout')).toBe(3);
+    expect(screenToFlowIndex('confirmation')).toBe(4);
 
     let state = checkoutReducer(
       undefined,
@@ -53,16 +68,16 @@ describe('checkout reducer', () => {
 
     expect(state.activeScreen).toBe('productDetail');
     expect(state.selectedProductId).toBe(products[0].id);
-    expect(state.flowIndex).toBe(2);
+    expect(state.flowIndex).toBe(1);
 
     state = checkoutReducer(state, checkoutActions.navigateTo('productDetail'));
     expect(state.selectedProductId).toBe(products[0].id);
-    expect(state.flowIndex).toBe(2);
+    expect(state.flowIndex).toBe(1);
 
     state = checkoutReducer(state, checkoutActions.navigateTo('cart'));
     expect(state.activeScreen).toBe('cart');
     expect(state.selectedProductId).toBeNull();
-    expect(state.flowIndex).toBe(3);
+    expect(state.flowIndex).toBe(2);
 
     state = checkoutReducer(
       state,
@@ -70,15 +85,17 @@ describe('checkout reducer', () => {
     );
     expect(state.activeScreen).toBe('confirmation');
     expect(state.selectedProductId).toBeNull();
-    expect(state.flowIndex).toBe(5);
+    expect(state.flowIndex).toBe(4);
     expect(state.lastCompletedTransactionNumber).toBe('SC-001');
 
     state = checkoutReducer(state, checkoutActions.checkoutReset());
     expect(state).toEqual({
-      activeScreen: 'home',
+      activeScreen: 'catalog',
       flowIndex: 0,
       selectedProductId: null,
       lastCompletedTransactionNumber: null,
+      isSubmitting: false,
+      paymentError: null,
     });
   });
 });
@@ -105,10 +122,14 @@ describe('transaction reducer', () => {
     );
 
     expect(state.latest?.summary.status).toBe('pending');
-    expect(state.latest?.summary.createdAt).toBe(state.latest?.summary.updatedAt);
+    expect(state.latest?.summary.createdAt).toBe(
+      state.latest?.summary.updatedAt,
+    );
     expect(state.latest?.encryptedSensitiveData).toBeTruthy();
     expect(state.latest?.encryptedSensitiveData).not.toContain('Jane Doe');
-    expect(decryptJson<typeof customer>(state.latest!.encryptedSensitiveData)).toEqual(customer);
+    expect(
+      decryptJson<typeof customer>(state.latest!.encryptedSensitiveData),
+    ).toEqual(customer);
 
     for (let index = 2; index <= 11; index += 1) {
       state = transactionReducer(
@@ -186,7 +207,10 @@ describe('transaction reducer', () => {
       hydrated: true,
     });
 
-    state = transactionReducer(state, transactionActions.hydrateTransactions(null));
+    state = transactionReducer(
+      state,
+      transactionActions.hydrateTransactions(null),
+    );
     expect(state).toEqual({
       latest: null,
       history: [],
