@@ -13,6 +13,7 @@ import { ProductCard } from '../components/ProductCard';
 import { EmptyState } from '../components/EmptyState';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { SectionHeader } from '../components/SectionHeader';
+import { useI18n } from '../i18n';
 
 type CatalogScreenProps = {
   layout: ResponsiveLayout;
@@ -23,6 +24,7 @@ type CatalogScreenProps = {
   catalogLastSyncedAt: string | null;
   cartQuantities: Record<string, number>;
   onAddToCart: (productId: string) => void;
+  onOpenProduct: (productId: string) => void;
   onRetryCatalogSync: () => void;
 };
 
@@ -35,17 +37,19 @@ export function CatalogScreen({
   catalogLastSyncedAt,
   cartQuantities,
   onAddToCart,
+  onOpenProduct,
   onRetryCatalogSync,
 }: CatalogScreenProps) {
+  const { t } = useI18n();
   const productCardWidth = layout.gridColumns > 1 ? '48%' : '100%';
 
   return (
     <ScreenFrame layout={layout}>
       <View style={styles.stack}>
         <SectionHeader
-          eyebrow="Catalog"
-          title="Browse products"
-          description="The grid switches between one and two columns based on the available width so the layout keeps breathing room on small screens."
+          eyebrow={t('catalog.eyebrow')}
+          title={t('catalog.title')}
+          description={t('catalog.description')}
         />
 
         <BackendSyncCard
@@ -57,18 +61,15 @@ export function CatalogScreen({
         />
 
         <AppCard style={styles.noteCard}>
-          <Text style={styles.noteTitle}>Navigation preview</Text>
-          <Text style={styles.noteDescription}>
-            Add products from the remote catalog, move into cart review, then
-            continue to checkout and confirmation with the same shell.
-          </Text>
+          <Text style={styles.noteTitle}>{t('catalog.noteTitle')}</Text>
+          <Text style={styles.noteDescription}>{t('catalog.noteDescription')}</Text>
         </AppCard>
 
         {catalogItems.length === 0 ? (
           <EmptyState
-            title="No products available"
-            description="Try syncing the catalog again to load the products from the backend."
-            actionLabel="Retry sync"
+            title={t('catalog.emptyTitle')}
+            description={t('catalog.emptyDescription')}
+            actionLabel={t('catalog.emptyAction')}
             onAction={onRetryCatalogSync}
           />
         ) : (
@@ -86,6 +87,7 @@ export function CatalogScreen({
                     quantity={quantity}
                     compact={layout.isCompact}
                     onAdd={() => onAddToCart(product.id)}
+                    onOpenDetails={() => onOpenProduct(product.id)}
                   />
                 </View>
               );

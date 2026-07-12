@@ -8,6 +8,7 @@ import { HomeScreen } from './screens/HomeScreen';
 import { CatalogScreen } from './screens/CatalogScreen';
 import { CartScreen } from './screens/CartScreen';
 import { CheckoutScreen } from './screens/CheckoutScreen';
+import { ProductDetailScreen } from './screens/ProductDetailScreen';
 import type {
   CatalogSource,
   CatalogStatus,
@@ -32,6 +33,8 @@ import {
   selectCheckoutActiveScreen,
   selectCheckoutFlowIndex,
   selectLatestOrderSummary,
+  selectLatestTransactionStatus,
+  selectSelectedProduct,
 } from './store/selectors';
 import { checkoutActions } from './store/checkout/checkoutSlice';
 import { cartActions } from './store/cart/cartSlice';
@@ -57,10 +60,14 @@ type ActiveScreenRendererProps = {
   cartCount: number;
   cartTotal: number;
   latestOrder: OrderSummary | null;
+  latestTransactionStatus: ReturnType<typeof selectLatestTransactionStatus>;
+  selectedProduct: Product | null;
+  selectedProductQuantity: number;
   flowIndex: number;
   navigate: (screen: ScreenId) => void;
   addToCart: (productId: string) => void;
   decrementItem: (productId: string) => void;
+  openProductDetail: (productId: string) => void;
   retryCatalogSync: () => void;
   placeOrder: () => void;
 };
@@ -82,6 +89,7 @@ function renderActiveScreen(
         lastOrder={props.latestOrder}
         flowIndex={props.flowIndex}
         onNavigate={props.navigate}
+        onOpenProduct={props.openProductDetail}
         onRetryCatalogSync={props.retryCatalogSync}
       />
     );
@@ -98,7 +106,21 @@ function renderActiveScreen(
         catalogLastSyncedAt={props.catalogLastSyncedAt}
         cartQuantities={props.cartQuantities}
         onAddToCart={props.addToCart}
+        onOpenProduct={props.openProductDetail}
         onRetryCatalogSync={props.retryCatalogSync}
+      />
+    );
+  }
+
+  if (activeScreen === 'productDetail') {
+    return (
+      <ProductDetailScreen
+        layout={props.layout}
+        product={props.selectedProduct}
+        quantityInCart={props.selectedProductQuantity}
+        flowIndex={props.flowIndex}
+        onNavigate={props.navigate}
+        onAddToCart={props.addToCart}
       />
     );
   }
@@ -137,6 +159,7 @@ function renderActiveScreen(
     <ConfirmationScreen
       layout={props.layout}
       lastOrder={props.latestOrder}
+      transactionStatus={props.latestTransactionStatus}
       cartCount={props.cartCount}
       onNavigate={props.navigate}
     />
@@ -158,7 +181,12 @@ export default function AppShell() {
   const cartCount = useAppSelector(selectCartCount);
   const cartTotal = useAppSelector(selectCartTotal);
   const latestOrder = useAppSelector(selectLatestOrderSummary);
+  const latestTransactionStatus = useAppSelector(selectLatestTransactionStatus);
+  const selectedProduct = useAppSelector(selectSelectedProduct);
   const flowIndex = useAppSelector(selectCheckoutFlowIndex);
+  const selectedProductQuantity = selectedProduct
+    ? cartQuantities[selectedProduct.id] ?? 0
+    : 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -200,6 +228,10 @@ export default function AppShell() {
     dispatch(cartActions.itemDecremented({ productId }));
   };
 
+  const openProductDetail = (productId: string) => {
+    dispatch(checkoutActions.openProductDetail({ productId }));
+  };
+
   const placeOrder = () => {
     dispatch(submitCheckout());
   };
@@ -215,10 +247,14 @@ export default function AppShell() {
     cartCount,
     cartTotal,
     latestOrder,
+    latestTransactionStatus,
+    selectedProduct,
+    selectedProductQuantity,
     flowIndex,
     navigate,
     addToCart,
     decrementItem,
+    openProductDetail,
     retryCatalogSync,
     placeOrder,
   });

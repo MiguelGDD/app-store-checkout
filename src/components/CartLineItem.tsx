@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing, typography } from '../theme';
 import type { Product } from '../types';
 import { formatCurrency, formatQuantity } from '../utils/format';
+import { useI18n } from '../i18n';
 import { AppCard } from './AppCard';
 import { Pill } from './Pill';
 
@@ -19,13 +20,15 @@ export function CartLineItem({
   onIncrement,
   onDecrement,
 }: CartLineItemProps) {
+  const { t } = useI18n();
+
   return (
     <AppCard style={styles.card}>
       <View style={styles.row}>
         <View style={styles.copy}>
           <View style={styles.badgeRow}>
             <Pill label={product.badge} tone="neutral" />
-            <Text style={styles.stock}>{product.stock} left</Text>
+            <Text style={styles.stock}>{t('cartLineItem.stock', { count: product.stock })}</Text>
           </View>
           <Text style={styles.name}>{product.name}</Text>
           <Text style={styles.description}>{product.description}</Text>

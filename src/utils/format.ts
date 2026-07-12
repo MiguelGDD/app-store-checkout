@@ -3,7 +3,7 @@ export function formatCurrency(value: number): string {
 }
 
 export function formatQuantity(quantity: number): string {
-  return `${quantity} item${quantity === 1 ? '' : 's'}`;
+  return `${quantity} producto${quantity === 1 ? '' : 's'}`;
 }
 
 export function formatOrderNumber(count: number): string {
@@ -11,7 +11,7 @@ export function formatOrderNumber(count: number): string {
 }
 
 export function formatDateTime(value: string): string {
-  return new Date(value).toLocaleString('en-US', {
+  return new Date(value).toLocaleString('es-CO', {
     dateStyle: 'medium',
     timeStyle: 'short',
   });

@@ -50,15 +50,15 @@ describe('catalog workflow', () => {
     expect(dispatch.mock.calls[1][0].payload.items).toMatchObject([
       expect.objectContaining({
         id: '1',
-        badge: 'Low stock',
+        badge: 'Stock bajo',
       }),
       expect.objectContaining({
         id: '2',
-        badge: 'Featured',
+        badge: 'Destacado',
       }),
       expect.objectContaining({
         id: '3',
-        badge: 'New',
+        badge: 'Nuevo',
       }),
     ]);
   });
@@ -77,7 +77,7 @@ describe('catalog workflow', () => {
     expect(dispatch.mock.calls[0][0]).toEqual(catalogActions.catalogSyncStarted());
     expect(dispatch.mock.calls[1][0]).toEqual(
       catalogActions.catalogSyncFailed({
-        error: 'Backend offline',
+        error: 'No se pudo sincronizar el catalogo.',
       }),
     );
   });

@@ -1,49 +1,106 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, spacing, typography } from '../theme';
-import type { OrderSummary, ResponsiveLayout, ScreenId } from '../types';
+import type {
+  OrderSummary,
+  ResponsiveLayout,
+  ScreenId,
+  TransactionStatus,
+} from '../types';
 import { formatCurrency } from '../utils/format';
 import { AppButton } from '../components/AppButton';
 import { AppCard } from '../components/AppCard';
 import { Pill } from '../components/Pill';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { SectionHeader } from '../components/SectionHeader';
+import { useI18n } from '../i18n';
+
+type ResultTone = 'neutral' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
 
 type ConfirmationScreenProps = {
   layout: ResponsiveLayout;
   lastOrder: OrderSummary | null;
+  transactionStatus: TransactionStatus | null;
   cartCount: number;
   onNavigate: (screen: ScreenId) => void;
+};
+
+const RESULT_COPY_BY_STATUS: Record<
+  TransactionStatus,
+  {
+    labelKey: 'confirmation.pendingLabel' | 'confirmation.completedLabel' | 'confirmation.failedLabel';
+    tone: ResultTone;
+    titleKey: 'confirmation.pendingTitle' | 'confirmation.completedTitle' | 'confirmation.failedTitle';
+    descriptionKey:
+      | 'confirmation.pendingDescription'
+      | 'confirmation.completedDescription'
+      | 'confirmation.failedDescription';
+  }
+> = {
+  pending: {
+    labelKey: 'confirmation.pendingLabel',
+    tone: 'warning',
+    titleKey: 'confirmation.pendingTitle',
+    descriptionKey: 'confirmation.pendingDescription',
+  },
+  completed: {
+    labelKey: 'confirmation.completedLabel',
+    tone: 'success',
+    titleKey: 'confirmation.completedTitle',
+    descriptionKey: 'confirmation.completedDescription',
+  },
+  failed: {
+    labelKey: 'confirmation.failedLabel',
+    tone: 'danger',
+    titleKey: 'confirmation.failedTitle',
+    descriptionKey: 'confirmation.failedDescription',
+  },
+};
+
+const EMPTY_RESULT_COPY = {
+  labelKey: 'confirmation.awaitingLabel' as const,
+  tone: 'neutral' as ResultTone,
+  titleKey: 'confirmation.emptyTitle' as const,
+  descriptionKey: 'confirmation.emptyDescription' as const,
 };
 
 export function ConfirmationScreen({
   layout,
   lastOrder,
+  transactionStatus,
   cartCount,
   onNavigate,
 }: ConfirmationScreenProps) {
+  const { t } = useI18n();
   const orderNumber = lastOrder?.number ?? 'SC-000';
   const orderDescription = lastOrder
-    ? `${lastOrder.itemCount} items confirmed for ${formatCurrency(lastOrder.total)}.`
-    : 'Complete an order from checkout to populate this view.';
+    ? t('common.confirmedItemsTotal', {
+        count: lastOrder.itemCount,
+        total: formatCurrency(lastOrder.total),
+      })
+    : t('confirmation.emptyDescription');
+  const resultCopy =
+    transactionStatus ? RESULT_COPY_BY_STATUS[transactionStatus] : EMPTY_RESULT_COPY;
 
   return (
     <ScreenFrame layout={layout}>
       <View style={styles.stack}>
         <SectionHeader
-          eyebrow="Confirmation"
-          title="Flow complete"
-          description="The shell now has a success landing state for the checkout sequence."
+          eyebrow={t('confirmation.eyebrow')}
+          title={t('confirmation.title')}
+          description={t('confirmation.description')}
         />
 
         <AppCard tone="hero" style={styles.heroCard}>
-          <Pill label="Order ready" tone="success" />
+          <Pill label={t(resultCopy.labelKey)} tone={resultCopy.tone} />
+          <Text style={styles.resultTitle}>{t(resultCopy.titleKey)}</Text>
           <Text style={styles.heroTitle}>{orderNumber}</Text>
-          <Text style={styles.heroDescription}>{orderDescription}</Text>
+          <Text style={styles.heroDescription}>{t(resultCopy.descriptionKey)}</Text>
+          <Text style={styles.orderDescription}>{orderDescription}</Text>
           <View style={styles.heroButtons}>
-            <AppButton label="Back to home" onPress={() => onNavigate('home')} />
+            <AppButton label={t('confirmation.backToHome')} onPress={() => onNavigate('home')} />
             <AppButton
-              label={`Open cart (${cartCount})`}
+              label={t('confirmation.openCart', { count: cartCount })}
               onPress={() => onNavigate('cart')}
               variant="secondary"
               compact
@@ -52,12 +109,8 @@ export function ConfirmationScreen({
         </AppCard>
 
         <AppCard style={styles.noteCard}>
-          <Text style={styles.noteTitle}>What is already solved here</Text>
-          <Text style={styles.noteText}>
-            The app shell defines the flow, the responsive layout rules and the
-            reusable components that the later tasks will reuse for Redux,
-            backend integration and deployment instructions.
-          </Text>
+          <Text style={styles.noteTitle}>{t('confirmation.noteTitle')}</Text>
+          <Text style={styles.noteText}>{t('confirmation.noteText')}</Text>
         </AppCard>
       </View>
     </ScreenFrame>
@@ -71,6 +124,13 @@ const styles = StyleSheet.create({
   heroCard: {
     gap: spacing.md,
   },
+  resultTitle: {
+    color: colors.textSoft,
+    fontSize: typography.small,
+    fontWeight: '800',
+    letterSpacing: 0.9,
+    textTransform: 'uppercase',
+  },
   heroTitle: {
     color: colors.text,
     fontSize: typography.hero,
@@ -82,6 +142,12 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: typography.body,
     lineHeight: 22,
+  },
+  orderDescription: {
+    color: colors.text,
+    fontSize: typography.body,
+    lineHeight: 22,
+    fontWeight: '700',
   },
   heroButtons: {
     flexDirection: 'row',

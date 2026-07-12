@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, spacing, typography } from '../theme';
 import type { TabId } from '../types';
+import { useI18n } from '../i18n';
 
 type TabBarProps = {
   activeTab: TabId;
@@ -9,14 +10,15 @@ type TabBarProps = {
   onNavigate: (screen: TabId) => void;
 };
 
-const tabs: Array<{ key: TabId; label: string }> = [
-  { key: 'home', label: 'Home' },
-  { key: 'catalog', label: 'Catalog' },
-  { key: 'cart', label: 'Cart' },
-  { key: 'checkout', label: 'Checkout' },
-];
-
 export function TabBar({ activeTab, cartCount, onNavigate }: TabBarProps) {
+  const { t } = useI18n();
+  const tabs: Array<{ key: TabId; label: string }> = [
+    { key: 'home', label: t('tab.home') },
+    { key: 'catalog', label: t('tab.catalog') },
+    { key: 'cart', label: t('tab.cart') },
+    { key: 'checkout', label: t('tab.checkout') },
+  ];
+
   return (
     <View style={styles.shell}>
       {tabs.map((tab) => {

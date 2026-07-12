@@ -6,7 +6,7 @@ React Native app shell for the mobile checkout challenge.
 
 - Responsive shell that stays usable on iPhone SE sized screens.
 - Custom navigation without an external navigation library.
-- Five screens in the flow: home, catalog, cart, checkout and confirmation.
+- Six screens in the flow: home, catalog, product detail, cart, checkout and confirmation.
 - Reusable UI pieces for cards, buttons, stepper, empty states and tab navigation.
 - Redux store with Flux-style slices for catalog, cart, checkout and transaction.
 - Sensitive transaction data is encrypted before it is persisted to AsyncStorage.
@@ -74,6 +74,7 @@ npx tsc --noEmit
 - The catalog now syncs from the deployed backend by default. If you need to
   point the app to a different backend, update
   [`src/infrastructure/backend/backendConfig.ts`](./src/infrastructure/backend/backendConfig.ts).
-- The Redux slices and workflow helpers are intentionally small so task 3 can
-  connect stock, task 4 can wire payment, and the later tasks can reuse the
-  same shell without changing the navigation structure.
+- The checkout workflow creates a pending transaction before the final result
+  screen resolves the order status.
+- The Redux slices and workflow helpers are intentionally small so task 4 can
+  extend the checkout path without rewriting the shell navigation.

@@ -38,8 +38,8 @@ export const submitCheckout = (): AppThunk => (dispatch, getState) => {
       createdAt,
       updatedAt: createdAt,
       customer: {
-        customerName: 'Demo Buyer',
-        customerEmail: 'buyer@example.com',
+        customerName: 'Comprador de prueba',
+        customerEmail: 'comprador@ejemplo.com',
         documentId: '1000000000',
         paymentToken: `token-${transactionId}`,
         paymentReference: number,

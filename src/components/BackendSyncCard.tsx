@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { colors, spacing, typography } from '../theme';
 import type { CatalogSource, CatalogStatus } from '../types';
 import { formatDateTime } from '../utils/format';
+import { useI18n } from '../i18n';
 import { AppButton } from './AppButton';
 import { AppCard } from './AppCard';
 import { Pill } from './Pill';
@@ -17,23 +18,11 @@ type BackendSyncCardProps = {
   onRetry: () => void;
 };
 
-const STATUS_LABEL_BY_CATALOG_STATE: Record<CatalogStatus, string> = {
-  idle: 'Idle',
-  loading: 'Syncing',
-  succeeded: 'Connected',
-  failed: 'Needs attention',
-};
-
 const STATUS_TONE_BY_CATALOG_STATE: Record<CatalogStatus, PillTone> = {
   idle: 'neutral',
   loading: 'primary',
   succeeded: 'success',
   failed: 'danger',
-};
-
-const SOURCE_LABEL_BY_CATALOG_SOURCE: Record<CatalogSource, string> = {
-  backend: 'Remote catalog',
-  demo: 'Demo fallback',
 };
 
 export function BackendSyncCard({
@@ -43,41 +32,51 @@ export function BackendSyncCard({
   lastSyncedAt,
   onRetry,
 }: BackendSyncCardProps) {
+  const { t } = useI18n();
   const isLoading = status === 'loading';
   const isSuccess = status === 'succeeded';
   const isError = status === 'failed';
-  const actionLabel = isError ? 'Retry sync' : 'Refresh catalog';
+  const actionLabel = isError ? t('backendSync.retrySync') : t('backendSync.refreshCatalog');
+  const statusLabelByCatalogState: Record<CatalogStatus, string> = {
+    idle: t('backendSync.idle'),
+    loading: t('backendSync.loading'),
+    succeeded: t('backendSync.connected'),
+    failed: t('backendSync.needsAttention'),
+  };
+  const sourceLabelByCatalogSource: Record<CatalogSource, string> = {
+    backend: t('backendSync.remoteCatalog'),
+    demo: t('backendSync.demoFallback'),
+  };
 
   return (
     <AppCard tone="strong" style={styles.card}>
       <View style={styles.header}>
         <Pill
-          label={STATUS_LABEL_BY_CATALOG_STATE[status]}
+          label={statusLabelByCatalogState[status]}
           tone={STATUS_TONE_BY_CATALOG_STATE[status]}
         />
-        <Text style={styles.sourceLabel}>{SOURCE_LABEL_BY_CATALOG_SOURCE[source]}</Text>
+        <Text style={styles.sourceLabel}>{sourceLabelByCatalogSource[source]}</Text>
       </View>
 
-      <Text style={styles.title}>Backend API client</Text>
-      <Text style={styles.description}>
-        The catalog is loaded through a centralized HTTP adapter and mapped into
-        Redux state before the UI renders the product cards.
-      </Text>
+      <Text style={styles.title}>{t('backendSync.title')}</Text>
+      <Text style={styles.description}>{t('backendSync.description')}</Text>
 
       {isLoading ? (
         <View style={styles.stateRow}>
           <ActivityIndicator color={colors.primary} />
-          <Text style={styles.stateText}>Loading products from the backend...</Text>
+          <Text style={styles.stateText}>{t('backendSync.loadingText')}</Text>
         </View>
       ) : null}
 
       {isSuccess && lastSyncedAt ? (
         <Text style={styles.successText}>
-          Last sync: {formatDateTime(lastSyncedAt)}
+          {t('backendSync.lastSync')} {formatDateTime(lastSyncedAt)}
         </Text>
       ) : null}
 
-      {isError ? <Text style={styles.errorText}>{error}</Text> : null}
+      {isError ? (
+        <Text style={styles.errorText}>{error ?? t('backendSync.genericError')}</Text>
+      ) : null}
 
       <AppButton
         label={actionLabel}

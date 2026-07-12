@@ -1,22 +1,14 @@
 import type { AppThunk } from '../store';
 import { catalogActions } from '../catalog/catalogSlice';
 import {
-  BackendApiError,
   backendStoreApiClient,
   type BackendStoreApiPort,
 } from '../../infrastructure/backend/backendApiClient';
 import { mapBackendProductsToProducts } from '../../infrastructure/backend/backendProductMapper';
+import { translate } from '../../i18n';
 
-function resolveCatalogSyncError(error: unknown): string {
-  if (error instanceof BackendApiError) {
-    return error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return 'Unable to sync catalog from backend.';
+function resolveCatalogSyncError(): string {
+  return translate('common.genericSyncError');
 }
 
 export function createCatalogSyncWorkflow(
@@ -35,10 +27,10 @@ export function createCatalogSyncWorkflow(
           source: 'backend',
         }),
       );
-    } catch (error) {
+    } catch {
       dispatch(
         catalogActions.catalogSyncFailed({
-          error: resolveCatalogSyncError(error),
+          error: resolveCatalogSyncError(),
         }),
       );
     }

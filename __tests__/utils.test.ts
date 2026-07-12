@@ -7,8 +7,8 @@ describe('format helpers', () => {
   });
 
   test('formats quantities with pluralization', () => {
-    expect(formatQuantity(1)).toBe('1 item');
-    expect(formatQuantity(3)).toBe('3 items');
+    expect(formatQuantity(1)).toBe('1 producto');
+    expect(formatQuantity(3)).toBe('3 productos');
   });
 
   test('formats order numbers with leading zeros', () => {

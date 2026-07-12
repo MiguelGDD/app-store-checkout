@@ -11,6 +11,7 @@ import { EmptyState } from '../components/EmptyState';
 import { FlowStepper } from '../components/FlowStepper';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { SectionHeader } from '../components/SectionHeader';
+import { useI18n } from '../i18n';
 
 type CheckoutItem = {
   product: Product;
@@ -38,37 +39,35 @@ export function CheckoutScreen({
   onNavigate,
   onPlaceOrder,
 }: CheckoutScreenProps) {
+  const { t } = useI18n();
+
   return (
     <ScreenFrame layout={layout}>
       <View style={styles.stack}>
         <SectionHeader
-          eyebrow="Checkout"
-          title="Confirm payment shell"
-          description="This screen is intentionally structured for the future payment integration. The flow already knows how to land on a confirmation view."
+          eyebrow={t('checkout.eyebrow')}
+          title={t('checkout.title')}
+          description={t('checkout.description')}
         />
 
         <AppCard style={styles.stepCard}>
-          <Text style={styles.sectionLabel}>Flow progress</Text>
+          <Text style={styles.sectionLabel}>{t('common.flowProgress')}</Text>
           <FlowStepper steps={flowSteps} activeIndex={flowIndex} />
         </AppCard>
 
         {items.length === 0 ? (
           <EmptyState
-            title="Nothing to confirm yet"
-            description="Add products in the catalog and review them in the cart before you continue."
-            actionLabel="Open cart"
+            title={t('checkout.emptyTitle')}
+            description={t('checkout.emptyDescription')}
+            actionLabel={t('checkout.emptyAction')}
             onAction={() => onNavigate('cart')}
           />
         ) : (
           <View style={layout.isWide ? styles.columnsWide : styles.columnsStacked}>
             <AppCard style={styles.reviewCard}>
-              <Text style={styles.sectionLabel}>Review</Text>
+              <Text style={styles.sectionLabel}>{t('checkout.reviewTitle')}</Text>
               <Text style={styles.reviewTitle}>{formatQuantity(itemCount)}</Text>
-              <Text style={styles.reviewDescription}>
-                The cart data is already connected to the shell, so the backend
-                and payment payload can be plugged in later without rewriting the
-                navigation.
-              </Text>
+              <Text style={styles.reviewDescription}>{t('checkout.reviewDescription')}</Text>
               <View style={styles.reviewLines}>
                 {items.map((item) => (
                   <View key={item.product.id} style={styles.reviewLine}>
@@ -82,28 +81,28 @@ export function CheckoutScreen({
             </AppCard>
 
             <AppCard style={styles.summaryCard}>
-              <Text style={styles.sectionLabel}>Summary</Text>
+              <Text style={styles.sectionLabel}>{t('checkout.summaryTitle')}</Text>
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Items</Text>
+                <Text style={styles.summaryLabel}>{t('checkout.summaryItems')}</Text>
                 <Text style={styles.summaryValue}>{formatQuantity(itemCount)}</Text>
               </View>
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Payment</Text>
-                <Text style={styles.summaryValue}>Sandbox ready</Text>
+                <Text style={styles.summaryLabel}>{t('checkout.summaryPayment')}</Text>
+                <Text style={styles.summaryValue}>{t('checkout.summaryPending')}</Text>
               </View>
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Total</Text>
+                <Text style={styles.summaryLabel}>{t('common.total')}</Text>
                 <Text style={styles.summaryValueStrong}>{formatCurrency(total)}</Text>
               </View>
               <View style={styles.summaryDivider} />
               <AppButton
-                label="Place demo order"
+                label={t('checkout.placeDemoOrder')}
                 onPress={onPlaceOrder}
                 fullWidth
                 disabled={itemCount === 0}
               />
               <AppButton
-                label="Back to cart"
+                label={t('checkout.backToCart')}
                 onPress={() => onNavigate('cart')}
                 variant="secondary"
                 compact
@@ -115,10 +114,13 @@ export function CheckoutScreen({
 
         {lastOrder ? (
           <AppCard style={styles.orderCard}>
-            <Text style={styles.orderLabel}>Latest confirmed order</Text>
+            <Text style={styles.orderLabel}>{t('checkout.latestOrderTitle')}</Text>
             <Text style={styles.orderTitle}>{lastOrder.number}</Text>
             <Text style={styles.orderDescription}>
-              {lastOrder.itemCount} items for {formatCurrency(lastOrder.total)}.
+              {t('checkout.latestOrderDescription', {
+                count: lastOrder.itemCount,
+                total: formatCurrency(lastOrder.total),
+              })}
             </Text>
           </AppCard>
         ) : null}
