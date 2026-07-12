@@ -1,0 +1,43 @@
+export type ScreenId = 'home' | 'catalog' | 'cart' | 'checkout' | 'confirmation';
+
+export type TabId = Exclude<ScreenId, 'confirmation'>;
+
+export type Product = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  badge: string;
+  accent: string;
+};
+
+export type CartMap = Record<string, number>;
+
+export type OrderSummary = {
+  number: string;
+  itemCount: number;
+  total: number;
+};
+
+export type ResponsiveLayout = {
+  width: number;
+  isCompact: boolean;
+  isWide: boolean;
+  pagePadding: number;
+  contentMaxWidth: number;
+  gridColumns: number;
+  bottomPadding: number;
+  stackGap: number;
+};
+
+export type FlowStep = {
+  title: string;
+  description: string;
+};
+
+export type Metric = {
+  label: string;
+  value: string;
+  description: string;
+};
