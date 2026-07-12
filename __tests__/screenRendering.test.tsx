@@ -1,8 +1,9 @@
 import React from 'react';
-import { TextInput } from 'react-native';
+import { Image, TextInput } from 'react-native';
 import ReactTestRenderer from 'react-test-renderer';
 
 import { TabBar } from '../src/components/TabBar';
+import { ProductArtwork } from '../src/components/ProductArtwork';
 import { products } from '../src/data/demo';
 import { I18nProvider } from '../src/i18n';
 import { CartScreen } from '../src/screens/CartScreen';
@@ -345,6 +346,23 @@ describe('screen rendering', () => {
     const output = textContent(selectedRenderer);
     expect(output).toContain('Agregar uno mas (2)');
     expect(output).toContain('Abrir carrito');
+  });
+
+  it('uses bundled product images and keeps the artwork fallback', () => {
+    const localImageRenderer = renderWithI18n(
+      <ProductArtwork
+        product={{ ...renderProduct(), id: '1', name: 'Smartphone X' }}
+      />,
+      compactLayout,
+    );
+    expect(localImageRenderer.root.findAllByType(Image)).toHaveLength(1);
+
+    const fallbackRenderer = renderWithI18n(
+      <ProductArtwork product={renderProduct()} />,
+      compactLayout,
+    );
+    expect(fallbackRenderer.root.findAllByType(Image)).toHaveLength(0);
+    expect(textContent(fallbackRenderer)).toContain('S');
   });
 
   it('renders the confirmation screen for empty, pending and completed transactions', () => {
