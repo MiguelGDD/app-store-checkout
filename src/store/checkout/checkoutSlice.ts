@@ -15,20 +15,16 @@ const initialState: CheckoutState = {
 };
 
 export function screenToFlowIndex(screen: ScreenId): number {
-  switch (screen) {
-    case 'home':
-      return 0;
-    case 'catalog':
-      return 1;
-    case 'cart':
-      return 2;
-    case 'checkout':
-    case 'confirmation':
-      return 3;
-    default:
-      return 0;
-  }
+  return FLOW_INDEX_BY_SCREEN[screen];
 }
+
+const FLOW_INDEX_BY_SCREEN: Record<ScreenId, number> = {
+  home: 0,
+  catalog: 1,
+  cart: 2,
+  checkout: 3,
+  confirmation: 3,
+};
 
 const checkoutSlice = createSlice({
   name: 'checkout',

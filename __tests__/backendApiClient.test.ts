@@ -1,0 +1,98 @@
+import { BackendApiError, createBackendStoreApiClient } from '../src/infrastructure/backend/backendApiClient';
+
+type MockResponse = {
+  ok: boolean;
+  status: number;
+  text: jest.Mock<Promise<string>, []>;
+};
+
+function createResponse(status: number, body: string): MockResponse {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    text: jest.fn().mockResolvedValue(body),
+  };
+}
+
+describe('backend api client', () => {
+  const globalWithFetch = globalThis as unknown as {
+    fetch?: typeof fetch;
+  };
+  const originalFetch = globalWithFetch.fetch;
+
+  afterEach(() => {
+    globalWithFetch.fetch = originalFetch;
+    jest.restoreAllMocks();
+  });
+
+  it('loads backend products from the API', async () => {
+    const fetchMock = jest.fn().mockResolvedValue(
+      createResponse(
+        200,
+        JSON.stringify([
+          {
+            id: 1,
+            name: 'Laptop',
+            description: 'Lightweight laptop',
+            price: 4200000,
+            stock: 7,
+            image: 'https://example.com/laptop.png',
+            createAt: '2026-07-12T00:00:00.000Z',
+            updateAt: '2026-07-12T00:00:00.000Z',
+          },
+        ]),
+      ),
+    );
+
+    globalWithFetch.fetch = fetchMock as unknown as typeof fetch;
+
+    const client = createBackendStoreApiClient();
+    const products = await client.getProducts();
+
+    expect(products).toHaveLength(1);
+    expect(products[0]).toMatchObject({
+      id: 1,
+      name: 'Laptop',
+      stock: 7,
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://165.22.180.227/products',
+      expect.objectContaining({
+        method: 'GET',
+        headers: expect.objectContaining({
+          'x-api-key': 'change-me',
+        }),
+      }),
+    );
+  });
+
+  it('throws a typed error when the API rejects the request', async () => {
+    const fetchMock = jest.fn().mockResolvedValue(
+      createResponse(
+        500,
+        JSON.stringify({
+          message: 'Backend unavailable',
+          statusCode: 500,
+        }),
+      ),
+    );
+
+    globalWithFetch.fetch = fetchMock as unknown as typeof fetch;
+
+    const client = createBackendStoreApiClient();
+
+    await expect(client.getProducts()).rejects.toMatchObject({
+      name: 'BackendApiError',
+      message: 'Backend unavailable',
+      status: 500,
+    });
+  });
+
+  it('throws when fetch is not available', async () => {
+    globalWithFetch.fetch = undefined;
+
+    const client = createBackendStoreApiClient();
+
+    await expect(client.getProducts()).rejects.toBeInstanceOf(BackendApiError);
+  });
+});

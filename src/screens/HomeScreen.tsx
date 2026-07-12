@@ -1,11 +1,20 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { metrics, featuredProductId, flowSteps, products } from '../data/demo';
+import { metrics, featuredProductId, flowSteps, products as demoProducts } from '../data/demo';
 import { colors, spacing, typography } from '../theme';
-import type { Metric, OrderSummary, ResponsiveLayout, ScreenId } from '../types';
+import type {
+  CatalogSource,
+  CatalogStatus,
+  Metric,
+  OrderSummary,
+  Product,
+  ResponsiveLayout,
+  ScreenId,
+} from '../types';
 import { formatCurrency, formatQuantity } from '../utils/format';
 import { AppButton } from '../components/AppButton';
 import { AppCard } from '../components/AppCard';
+import { BackendSyncCard } from '../components/BackendSyncCard';
 import { FlowStepper } from '../components/FlowStepper';
 import { MetricCard } from '../components/MetricCard';
 import { Pill } from '../components/Pill';
@@ -14,25 +23,54 @@ import { SectionHeader } from '../components/SectionHeader';
 
 type HomeScreenProps = {
   layout: ResponsiveLayout;
+  catalogItems: Product[];
+  catalogStatus: CatalogStatus;
+  catalogError: string | null;
+  catalogSource: CatalogSource;
+  catalogLastSyncedAt: string | null;
   cartCount: number;
   lastOrder: OrderSummary | null;
   flowIndex: number;
   onNavigate: (screen: ScreenId) => void;
+  onRetryCatalogSync: () => void;
 };
+
+const METRIC_ACCENTS = ['primary', 'secondary', 'success'] as const;
+
+function getMetricCardWidth(layout: ResponsiveLayout) {
+  if (layout.isWide) {
+    return '31%';
+  }
+
+  if (layout.isCompact) {
+    return '100%';
+  }
+
+  return '48%';
+}
+
+function getMetricAccent(index: number) {
+  return METRIC_ACCENTS[index] ?? 'success';
+}
 
 export function HomeScreen({
   layout,
+  catalogItems,
+  catalogStatus,
+  catalogError,
+  catalogSource,
+  catalogLastSyncedAt,
   cartCount,
   lastOrder,
   flowIndex,
   onNavigate,
+  onRetryCatalogSync,
 }: HomeScreenProps) {
-  const featuredProduct = products.find((product) => product.id === featuredProductId) ?? products[0];
-  const metricCardWidth = layout.isWide
-    ? '31%'
-    : layout.isCompact
-      ? '100%'
-      : '48%';
+  const featuredProduct =
+    catalogItems.find((product) => product.id === featuredProductId) ??
+    catalogItems[0] ??
+    demoProducts[0];
+  const metricCardWidth = getMetricCardWidth(layout);
 
   return (
     <ScreenFrame layout={layout}>
@@ -64,6 +102,14 @@ export function HomeScreen({
           </View>
         </AppCard>
 
+        <BackendSyncCard
+          status={catalogStatus}
+          error={catalogError}
+          source={catalogSource}
+          lastSyncedAt={catalogLastSyncedAt}
+          onRetry={onRetryCatalogSync}
+        />
+
         <View style={styles.metricGrid}>
           {metrics.map((metric: Metric, index) => (
             <View
@@ -77,7 +123,7 @@ export function HomeScreen({
                 label={metric.label}
                 value={metric.value}
                 description={metric.description}
-                accent={index === 0 ? 'primary' : index === 1 ? 'secondary' : 'success'}
+                accent={getMetricAccent(index)}
               />
             </View>
           ))}

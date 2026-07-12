@@ -22,6 +22,11 @@ export function ConfirmationScreen({
   cartCount,
   onNavigate,
 }: ConfirmationScreenProps) {
+  const orderNumber = lastOrder?.number ?? 'SC-000';
+  const orderDescription = lastOrder
+    ? `${lastOrder.itemCount} items confirmed for ${formatCurrency(lastOrder.total)}.`
+    : 'Complete an order from checkout to populate this view.';
+
   return (
     <ScreenFrame layout={layout}>
       <View style={styles.stack}>
@@ -33,14 +38,8 @@ export function ConfirmationScreen({
 
         <AppCard tone="hero" style={styles.heroCard}>
           <Pill label="Order ready" tone="success" />
-          <Text style={styles.heroTitle}>
-            {lastOrder ? lastOrder.number : 'SC-000'}
-          </Text>
-          <Text style={styles.heroDescription}>
-            {lastOrder
-              ? `${lastOrder.itemCount} items confirmed for ${formatCurrency(lastOrder.total)}.`
-              : 'Complete an order from checkout to populate this view.'}
-          </Text>
+          <Text style={styles.heroTitle}>{orderNumber}</Text>
+          <Text style={styles.heroDescription}>{orderDescription}</Text>
           <View style={styles.heroButtons}>
             <AppButton label="Back to home" onPress={() => onNavigate('home')} />
             <AppButton

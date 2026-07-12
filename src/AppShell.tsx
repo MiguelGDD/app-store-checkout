@@ -8,10 +8,22 @@ import { HomeScreen } from './screens/HomeScreen';
 import { CatalogScreen } from './screens/CatalogScreen';
 import { CartScreen } from './screens/CartScreen';
 import { CheckoutScreen } from './screens/CheckoutScreen';
-import type { ScreenId } from './types';
+import type {
+  CatalogSource,
+  CatalogStatus,
+  OrderSummary,
+  Product,
+  ResponsiveLayout,
+  ScreenId,
+} from './types';
 import { useResponsiveLayout } from './utils/responsive';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import {
+  selectCatalogError,
+  selectCatalogItems,
+  selectCatalogLastSyncedAt,
+  selectCatalogSource,
+  selectCatalogStatus,
   selectActiveTab,
   selectCartCount,
   selectCartLineItems,
@@ -25,13 +37,122 @@ import { checkoutActions } from './store/checkout/checkoutSlice';
 import { cartActions } from './store/cart/cartSlice';
 import { transactionActions } from './store/transaction/transactionSlice';
 import { loadEncryptedTransactionSnapshot } from './store/transactionStorage';
+import { syncCatalog } from './store/workflows/catalogWorkflow';
 import { submitCheckout } from './store/workflows/checkoutWorkflow';
+
+type CartLineItem = {
+  product: Product;
+  quantity: number;
+};
+
+type ActiveScreenRendererProps = {
+  layout: ResponsiveLayout;
+  catalogItems: Product[];
+  catalogStatus: CatalogStatus;
+  catalogError: string | null;
+  catalogSource: CatalogSource;
+  catalogLastSyncedAt: string | null;
+  cartItems: CartLineItem[];
+  cartQuantities: Record<string, number>;
+  cartCount: number;
+  cartTotal: number;
+  latestOrder: OrderSummary | null;
+  flowIndex: number;
+  navigate: (screen: ScreenId) => void;
+  addToCart: (productId: string) => void;
+  decrementItem: (productId: string) => void;
+  retryCatalogSync: () => void;
+  placeOrder: () => void;
+};
+
+function renderActiveScreen(
+  activeScreen: ScreenId,
+  props: ActiveScreenRendererProps,
+) {
+  if (activeScreen === 'home') {
+    return (
+      <HomeScreen
+        layout={props.layout}
+        catalogItems={props.catalogItems}
+        catalogStatus={props.catalogStatus}
+        catalogError={props.catalogError}
+        catalogSource={props.catalogSource}
+        catalogLastSyncedAt={props.catalogLastSyncedAt}
+        cartCount={props.cartCount}
+        lastOrder={props.latestOrder}
+        flowIndex={props.flowIndex}
+        onNavigate={props.navigate}
+        onRetryCatalogSync={props.retryCatalogSync}
+      />
+    );
+  }
+
+  if (activeScreen === 'catalog') {
+    return (
+      <CatalogScreen
+        layout={props.layout}
+        catalogItems={props.catalogItems}
+        catalogStatus={props.catalogStatus}
+        catalogError={props.catalogError}
+        catalogSource={props.catalogSource}
+        catalogLastSyncedAt={props.catalogLastSyncedAt}
+        cartQuantities={props.cartQuantities}
+        onAddToCart={props.addToCart}
+        onRetryCatalogSync={props.retryCatalogSync}
+      />
+    );
+  }
+
+  if (activeScreen === 'cart') {
+    return (
+      <CartScreen
+        layout={props.layout}
+        items={props.cartItems}
+        itemCount={props.cartCount}
+        total={props.cartTotal}
+        lastOrder={props.latestOrder}
+        onNavigate={props.navigate}
+        onIncrement={props.addToCart}
+        onDecrement={props.decrementItem}
+      />
+    );
+  }
+
+  if (activeScreen === 'checkout') {
+    return (
+      <CheckoutScreen
+        layout={props.layout}
+        items={props.cartItems}
+        itemCount={props.cartCount}
+        total={props.cartTotal}
+        lastOrder={props.latestOrder}
+        flowIndex={props.flowIndex}
+        onNavigate={props.navigate}
+        onPlaceOrder={props.placeOrder}
+      />
+    );
+  }
+
+  return (
+    <ConfirmationScreen
+      layout={props.layout}
+      lastOrder={props.latestOrder}
+      cartCount={props.cartCount}
+      onNavigate={props.navigate}
+    />
+  );
+}
 
 export default function AppShell() {
   const dispatch = useAppDispatch();
   const layout = useResponsiveLayout();
   const activeScreen = useAppSelector(selectCheckoutActiveScreen);
   const activeTab = useAppSelector(selectActiveTab);
+  const catalogItems = useAppSelector(selectCatalogItems);
+  const catalogStatus = useAppSelector(selectCatalogStatus);
+  const catalogError = useAppSelector(selectCatalogError);
+  const catalogSource = useAppSelector(selectCatalogSource);
+  const catalogLastSyncedAt = useAppSelector(selectCatalogLastSyncedAt);
   const cartItems = useAppSelector(selectCartLineItems);
   const cartQuantities = useAppSelector(selectCartQuantities);
   const cartCount = useAppSelector(selectCartCount);
@@ -59,6 +180,14 @@ export default function AppShell() {
     };
   }, [dispatch]);
 
+  useEffect(() => {
+    dispatch(syncCatalog());
+  }, [dispatch]);
+
+  const retryCatalogSync = () => {
+    dispatch(syncCatalog());
+  };
+
   const navigate = (screen: ScreenId) => {
     dispatch(checkoutActions.navigateTo(screen));
   };
@@ -74,6 +203,25 @@ export default function AppShell() {
   const placeOrder = () => {
     dispatch(submitCheckout());
   };
+  const activeScreenContent = renderActiveScreen(activeScreen, {
+    layout,
+    catalogItems,
+    catalogStatus,
+    catalogError,
+    catalogSource,
+    catalogLastSyncedAt,
+    cartItems,
+    cartQuantities,
+    cartCount,
+    cartTotal,
+    latestOrder,
+    flowIndex,
+    navigate,
+    addToCart,
+    decrementItem,
+    retryCatalogSync,
+    placeOrder,
+  });
 
   return (
     <View style={styles.root}>
@@ -84,54 +232,7 @@ export default function AppShell() {
         <View style={styles.glowThree} />
       </View>
       <View style={styles.screen}>
-        {activeScreen === 'home' ? (
-          <HomeScreen
-            layout={layout}
-            cartCount={cartCount}
-            lastOrder={latestOrder}
-            flowIndex={flowIndex}
-            onNavigate={navigate}
-          />
-        ) : null}
-        {activeScreen === 'catalog' ? (
-          <CatalogScreen
-            layout={layout}
-            cartQuantities={cartQuantities}
-            onAddToCart={addToCart}
-          />
-        ) : null}
-        {activeScreen === 'cart' ? (
-          <CartScreen
-            layout={layout}
-            items={cartItems}
-            itemCount={cartCount}
-            total={cartTotal}
-            lastOrder={latestOrder}
-            onNavigate={navigate}
-            onIncrement={addToCart}
-            onDecrement={decrementItem}
-          />
-        ) : null}
-        {activeScreen === 'checkout' ? (
-          <CheckoutScreen
-            layout={layout}
-            items={cartItems}
-            itemCount={cartCount}
-            total={cartTotal}
-            lastOrder={latestOrder}
-            flowIndex={flowIndex}
-            onNavigate={navigate}
-            onPlaceOrder={placeOrder}
-          />
-        ) : null}
-        {activeScreen === 'confirmation' ? (
-          <ConfirmationScreen
-            layout={layout}
-            lastOrder={latestOrder}
-            cartCount={cartCount}
-            onNavigate={navigate}
-          />
-        ) : null}
+        {activeScreenContent}
       </View>
 
       <TabBar

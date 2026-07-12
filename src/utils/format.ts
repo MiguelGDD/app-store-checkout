@@ -9,3 +9,10 @@ export function formatQuantity(quantity: number): string {
 export function formatOrderNumber(count: number): string {
   return `SC-${String(count).padStart(3, '0')}`;
 }
+
+export function formatDateTime(value: string): string {
+  return new Date(value).toLocaleString('en-US', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+}

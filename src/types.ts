@@ -10,7 +10,12 @@ export type Product = {
   stock: number;
   badge: string;
   accent: string;
+  imageUrl?: string | null;
 };
+
+export type CatalogStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
+
+export type CatalogSource = 'demo' | 'backend';
 
 export type CartMap = Record<string, number>;
 

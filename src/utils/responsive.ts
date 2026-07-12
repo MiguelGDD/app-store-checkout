@@ -5,7 +5,14 @@ import type { ResponsiveLayout } from '../types';
 export function createResponsiveLayout(width: number): ResponsiveLayout {
   const isCompact = width < 390;
   const isWide = width >= 720;
-  const pagePadding = isCompact ? 16 : width < 600 ? 20 : 24;
+  let pagePadding = 24;
+
+  if (isCompact) {
+    pagePadding = 16;
+  } else if (width < 600) {
+    pagePadding = 20;
+  }
+
   const contentMaxWidth = isWide ? 920 : 640;
   const gridColumns = width >= 620 ? 2 : 1;
   const bottomPadding = isWide ? 152 : 140;

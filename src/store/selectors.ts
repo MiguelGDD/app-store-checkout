@@ -5,15 +5,27 @@ import type { RootState } from './store';
 import { screenToFlowIndex } from './checkout/checkoutSlice';
 
 export const selectCatalogItems = (state: RootState) => state.catalog.items;
+export const selectCatalogStatus = (state: RootState) => state.catalog.status;
+export const selectCatalogError = (state: RootState) => state.catalog.error;
+export const selectCatalogSource = (state: RootState) => state.catalog.source;
+export const selectCatalogLastSyncedAt = (state: RootState) =>
+  state.catalog.lastSyncedAt;
 export const selectCartItemsMap = (state: RootState) => state.cart.items;
 export const selectCheckoutActiveScreen = (state: RootState) =>
   state.checkout.activeScreen;
 export const selectCheckoutFlowIndex = (state: RootState) =>
   state.checkout.flowIndex;
+
+const ACTIVE_TAB_BY_SCREEN: Record<ScreenId, TabId> = {
+  home: 'home',
+  catalog: 'catalog',
+  cart: 'cart',
+  checkout: 'checkout',
+  confirmation: 'checkout',
+};
+
 export const selectActiveTab = (state: RootState): TabId =>
-  state.checkout.activeScreen === 'confirmation'
-    ? 'checkout'
-    : state.checkout.activeScreen;
+  ACTIVE_TAB_BY_SCREEN[state.checkout.activeScreen];
 export const selectLatestTransactionRecord = (state: RootState) =>
   state.transaction.latest;
 export const selectTransactionHydrated = (state: RootState) =>
