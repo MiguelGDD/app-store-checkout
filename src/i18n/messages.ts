@@ -117,7 +117,8 @@ const es = {
     'La vista de detalle le da al revisor un lugar para inspeccionar el producto seleccionado antes de moverlo a la revision del carrito y al pago.',
   'checkout.eyebrow': 'Pago',
   'checkout.title': 'Datos de pago',
-  'checkout.description': 'Revisa el total y selecciona como quieres pagar.',
+  'checkout.description':
+    'Completa los datos de tu tarjeta para finalizar la compra.',
   'checkout.emptyTitle': 'Aun no hay nada por confirmar',
   'checkout.emptyDescription':
     'Agrega productos en el catalogo y revisalos en el carrito antes de continuar.',

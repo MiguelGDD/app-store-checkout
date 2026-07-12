@@ -290,7 +290,6 @@ describe('screen rendering', () => {
     expect(textContent(populatedRenderer)).toContain(
       'Ingresa un numero VISA o Mastercard valido',
     );
-
     ReactTestRenderer.act(() => {
       inputs[0].props.onChangeText('Ana Perez');
       inputs[1].props.onChangeText('4242424242424242');

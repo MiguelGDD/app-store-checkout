@@ -7,10 +7,11 @@ onboarding de pago con tarjeta y confirmacion de transaccion.
 
 - Catalogo sincronizado desde el backend desplegado.
 - Seleccion de uno o varios productos con cantidades de 1 a N unidades.
+- Detalle de producto y control de cantidades.
 - Carrito con calculo de subtotal y total.
-- Selector `Pay with credit card` que abre el formulario en un backdrop.
+- Checkout con resumen del pedido y selector `Pay with credit card` en un backdrop.
+- Formulario de tarjeta con validacion de titular, numero, vencimiento y CVC.
 - Deteccion visual de VISA y Mastercard con logos nativos.
-- Validacion de titular, Luhn, vencimiento vigente y CVC antes del pago.
 - Estado de transaccion pendiente, completada o fallida.
 - Persistencia cifrada del resumen de transacciones en `AsyncStorage`.
 - Interfaz responsive para telefonos compactos y pantallas grandes.
