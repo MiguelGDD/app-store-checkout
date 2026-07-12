@@ -56,6 +56,12 @@ Run unit tests:
 npm test -- --runInBand
 ```
 
+Run test coverage:
+
+```bash
+npm run test:coverage
+```
+
 Run lint:
 
 ```bash
@@ -67,6 +73,17 @@ Run TypeScript typecheck:
 ```bash
 npx tsc --noEmit
 ```
+
+## Coverage
+
+Current coverage for this branch:
+
+- Statements: 91.7%
+- Branches: 83.33%
+- Functions: 81.87%
+- Lines: 91.47%
+
+The coverage target is enforced through Jest so regressions below 80% fail locally.
 
 ## Notes
 
