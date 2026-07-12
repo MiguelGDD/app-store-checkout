@@ -4,6 +4,7 @@ import { colors, radius, spacing, typography } from '../theme';
 import type { Product } from '../types';
 import { formatCurrency, formatQuantity } from '../utils/format';
 import { useI18n } from '../i18n';
+import { useResponsiveLayout } from '../utils/responsive';
 import { AppCard } from './AppCard';
 import { Pill } from './Pill';
 
@@ -21,6 +22,11 @@ export function CartLineItem({
   onDecrement,
 }: CartLineItemProps) {
   const { t } = useI18n();
+  const layout = useResponsiveLayout();
+  const controlWidth = layout.isCompact ? 96 : 108;
+  const controlButtonSize = layout.isCompact ? 32 : 34;
+  const stockSize = layout.isCompact ? 11 : typography.small;
+  const quantitySize = layout.isCompact ? 11 : typography.small;
 
   return (
     <AppCard style={styles.card}>
@@ -28,18 +34,23 @@ export function CartLineItem({
         <View style={styles.copy}>
           <View style={styles.badgeRow}>
             <Pill label={product.badge} tone="neutral" />
-            <Text style={styles.stock}>{t('cartLineItem.stock', { count: product.stock })}</Text>
+            <Text style={[styles.stock, { fontSize: stockSize }]}>
+              {t('cartLineItem.stock', { count: product.stock })}
+            </Text>
           </View>
           <Text style={styles.name}>{product.name}</Text>
           <Text style={styles.description}>{product.description}</Text>
-          <Text style={styles.quantity}>{formatQuantity(quantity)}</Text>
+          <Text style={[styles.quantity, { fontSize: quantitySize }]}>
+            {formatQuantity(quantity)}
+          </Text>
         </View>
-        <View style={styles.controls}>
+        <View style={[styles.controls, { width: controlWidth }]}>
           <Pressable
             accessibilityRole="button"
             onPress={onDecrement}
             style={({ pressed }) => [
               styles.controlButton,
+              { width: controlButtonSize, height: controlButtonSize },
               pressed && styles.controlButtonPressed,
             ]}
           >
@@ -52,6 +63,7 @@ export function CartLineItem({
             style={({ pressed }) => [
               styles.controlButton,
               styles.controlButtonAccent,
+              { width: controlButtonSize, height: controlButtonSize },
               pressed && styles.controlButtonPressed,
             ]}
           >

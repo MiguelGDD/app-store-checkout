@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import type { StyleProp, TextStyle } from 'react-native';
 
 import { colors, spacing, typography } from '../theme';
 import type {
@@ -14,6 +15,7 @@ import { Pill } from '../components/Pill';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { SectionHeader } from '../components/SectionHeader';
 import { useI18n } from '../i18n';
+import { resolveResponsiveChoice } from '../utils/responsive';
 
 type ResultTone = 'neutral' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
 
@@ -81,6 +83,11 @@ export function ConfirmationScreen({
     : t('confirmation.emptyDescription');
   const resultCopy =
     transactionStatus ? RESULT_COPY_BY_STATUS[transactionStatus] : EMPTY_RESULT_COPY;
+  const heroTitleLayoutStyle: StyleProp<TextStyle> = resolveResponsiveChoice(layout, {
+    compact: styles.heroTitleCompact,
+    wide: styles.heroTitleWide,
+    defaultValue: null,
+  });
 
   return (
     <ScreenFrame layout={layout}>
@@ -94,7 +101,14 @@ export function ConfirmationScreen({
         <AppCard tone="hero" style={styles.heroCard}>
           <Pill label={t(resultCopy.labelKey)} tone={resultCopy.tone} />
           <Text style={styles.resultTitle}>{t(resultCopy.titleKey)}</Text>
-          <Text style={styles.heroTitle}>{orderNumber}</Text>
+          <Text
+            style={[
+              styles.heroTitle,
+              heroTitleLayoutStyle,
+            ]}
+          >
+            {orderNumber}
+          </Text>
           <Text style={styles.heroDescription}>{t(resultCopy.descriptionKey)}</Text>
           <Text style={styles.orderDescription}>{orderDescription}</Text>
           <View style={styles.heroButtons}>
@@ -137,6 +151,14 @@ const styles = StyleSheet.create({
     lineHeight: 36,
     fontWeight: '900',
     letterSpacing: -0.7,
+  },
+  heroTitleCompact: {
+    fontSize: 26,
+    lineHeight: 31,
+  },
+  heroTitleWide: {
+    fontSize: 34,
+    lineHeight: 40,
   },
   heroDescription: {
     color: colors.textMuted,

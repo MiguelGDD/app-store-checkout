@@ -2,20 +2,56 @@ import { useWindowDimensions } from 'react-native';
 
 import type { ResponsiveLayout } from '../types';
 
+type ResponsiveChoice<T> = {
+  compact?: T;
+  wide?: T;
+  defaultValue: T;
+};
+
+export function resolveResponsiveChoice<T>(
+  layout: Pick<ResponsiveLayout, 'isCompact' | 'isWide'>,
+  choice: ResponsiveChoice<T>,
+): T {
+  if (layout.isCompact && choice.compact !== undefined) {
+    return choice.compact;
+  }
+
+  if (layout.isWide && choice.wide !== undefined) {
+    return choice.wide;
+  }
+
+  return choice.defaultValue;
+}
+
 export function createResponsiveLayout(width: number): ResponsiveLayout {
   const isCompact = width < 390;
   const isWide = width >= 720;
-  let pagePadding = 24;
-
-  if (isCompact) {
-    pagePadding = 16;
-  } else if (width < 600) {
-    pagePadding = 20;
-  }
-
+  const pagePadding = resolveResponsiveChoice(
+    { isCompact, isWide },
+    {
+      compact: 16,
+      wide: 28,
+      defaultValue: 20,
+    },
+  );
   const contentMaxWidth = isWide ? 920 : 640;
   const gridColumns = width >= 620 ? 2 : 1;
-  const bottomPadding = isWide ? 152 : 140;
+  const bottomPadding = resolveResponsiveChoice(
+    { isCompact, isWide },
+    {
+      compact: 128,
+      wide: 160,
+      defaultValue: 144,
+    },
+  );
+  const stackGap = resolveResponsiveChoice(
+    { isCompact, isWide },
+    {
+      compact: 12,
+      wide: 20,
+      defaultValue: 16,
+    },
+  );
 
   return {
     width,
@@ -25,7 +61,7 @@ export function createResponsiveLayout(width: number): ResponsiveLayout {
     contentMaxWidth,
     gridColumns,
     bottomPadding,
-    stackGap: isCompact ? 12 : 16,
+    stackGap,
   };
 }
 

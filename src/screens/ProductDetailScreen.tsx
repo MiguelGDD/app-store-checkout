@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import type { StyleProp, TextStyle } from 'react-native';
 
 import { flowSteps } from '../data/demo';
 import { colors, spacing, typography } from '../theme';
@@ -12,6 +13,7 @@ import { Pill } from '../components/Pill';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { SectionHeader } from '../components/SectionHeader';
 import { useI18n } from '../i18n';
+import { resolveResponsiveChoice } from '../utils/responsive';
 
 type ProductDetailScreenProps = {
   layout: ResponsiveLayout;
@@ -57,6 +59,11 @@ export function ProductDetailScreen({
     quantityInCart > 0
       ? t('productDetail.addOneMore', { count: quantityInCart })
       : t('productDetail.addToCart');
+  const priceLayoutStyle: StyleProp<TextStyle> = resolveResponsiveChoice(layout, {
+    compact: styles.priceCompact,
+    wide: styles.priceWide,
+    defaultValue: null,
+  });
 
   return (
     <ScreenFrame layout={layout}>
@@ -73,7 +80,14 @@ export function ProductDetailScreen({
             <Pill label={t('common.inStock', { count: product.stock })} tone="neutral" />
           </View>
 
-          <Text style={styles.price}>{formatCurrency(product.price)}</Text>
+          <Text
+            style={[
+              styles.price,
+              priceLayoutStyle,
+            ]}
+          >
+            {formatCurrency(product.price)}
+          </Text>
           <Text style={styles.description}>{product.description}</Text>
           <Text style={styles.meta}>
             {t('productDetail.inCart', { quantity: formatQuantity(quantityInCart) })}
@@ -138,6 +152,14 @@ const styles = StyleSheet.create({
     lineHeight: 36,
     fontWeight: '900',
     letterSpacing: -0.7,
+  },
+  priceCompact: {
+    fontSize: 26,
+    lineHeight: 31,
+  },
+  priceWide: {
+    fontSize: 34,
+    lineHeight: 40,
   },
   description: {
     color: colors.textMuted,

@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import type { StyleProp, TextStyle } from 'react-native';
 
 import { metrics, featuredProductId, flowSteps, products as demoProducts } from '../data/demo';
 import { colors, spacing, typography } from '../theme';
@@ -21,6 +22,7 @@ import { Pill } from '../components/Pill';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { SectionHeader } from '../components/SectionHeader';
 import { useI18n } from '../i18n';
+import { resolveResponsiveChoice } from '../utils/responsive';
 
 type HomeScreenProps = {
   layout: ResponsiveLayout;
@@ -75,6 +77,20 @@ export function HomeScreen({
     catalogItems[0] ??
     demoProducts[0];
   const metricCardWidth = getMetricCardWidth(layout);
+  const heroTitleLayoutStyle: StyleProp<TextStyle> = resolveResponsiveChoice(layout, {
+    compact: styles.heroTitleCompact,
+    wide: styles.heroTitleWide,
+    defaultValue: null,
+  });
+  const featureTitleLayoutStyle: StyleProp<TextStyle> = resolveResponsiveChoice(layout, {
+    compact: styles.featureTitleCompact,
+    wide: styles.featureTitleWide,
+    defaultValue: null,
+  });
+  const orderTitleLayoutStyle: StyleProp<TextStyle> = resolveResponsiveChoice(layout, {
+    compact: styles.orderTitleCompact,
+    defaultValue: null,
+  });
 
   return (
     <ScreenFrame layout={layout}>
@@ -90,7 +106,14 @@ export function HomeScreen({
             <Pill label={t('home.shellReady')} tone="primary" />
             <Text style={styles.heroCount}>{formatQuantity(cartCount)}</Text>
           </View>
-          <Text style={styles.heroTitle}>{t('home.heroTitle')}</Text>
+          <Text
+            style={[
+              styles.heroTitle,
+              heroTitleLayoutStyle,
+            ]}
+          >
+            {t('home.heroTitle')}
+          </Text>
           <Text style={styles.heroDescription}>{t('home.heroDescription')}</Text>
           <View style={styles.heroButtons}>
             <AppButton label={t('common.openCatalog')} onPress={() => onNavigate('catalog')} />
@@ -132,7 +155,14 @@ export function HomeScreen({
 
         <AppCard style={styles.featureCard}>
           <Text style={styles.sectionLabel}>{t('common.featuredProduct')}</Text>
-          <Text style={styles.featureTitle}>{featuredProduct.name}</Text>
+          <Text
+            style={[
+              styles.featureTitle,
+              featureTitleLayoutStyle,
+            ]}
+          >
+            {featuredProduct.name}
+          </Text>
           <Text style={styles.featureDescription}>{featuredProduct.description}</Text>
           <View style={styles.featureFooter}>
             <Text style={styles.featurePrice}>
@@ -160,7 +190,12 @@ export function HomeScreen({
         {lastOrder ? (
           <AppCard style={styles.orderCard}>
             <Text style={styles.sectionLabel}>{t('common.latestOrder')}</Text>
-            <Text style={styles.orderTitle}>
+            <Text
+              style={[
+                styles.orderTitle,
+                orderTitleLayoutStyle,
+              ]}
+            >
               {t('common.orderNumber', { number: lastOrder.number })}
             </Text>
             <Text style={styles.orderDescription}>
@@ -214,6 +249,14 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: -0.7,
   },
+  heroTitleCompact: {
+    fontSize: 26,
+    lineHeight: 31,
+  },
+  heroTitleWide: {
+    fontSize: 34,
+    lineHeight: 40,
+  },
   heroDescription: {
     color: colors.textMuted,
     fontSize: typography.body,
@@ -248,6 +291,14 @@ const styles = StyleSheet.create({
     fontSize: typography.title,
     lineHeight: 30,
     fontWeight: '800',
+  },
+  featureTitleCompact: {
+    fontSize: 22,
+    lineHeight: 28,
+  },
+  featureTitleWide: {
+    fontSize: 26,
+    lineHeight: 32,
   },
   featureDescription: {
     color: colors.textMuted,
@@ -285,6 +336,10 @@ const styles = StyleSheet.create({
     fontSize: typography.subtitle,
     fontWeight: '800',
     lineHeight: 26,
+  },
+  orderTitleCompact: {
+    fontSize: 16,
+    lineHeight: 22,
   },
   orderDescription: {
     color: colors.textMuted,

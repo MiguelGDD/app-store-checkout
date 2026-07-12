@@ -2,6 +2,8 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 
 import { colors, radius, spacing, typography } from '../theme';
+import type { ResponsiveLayout } from '../types';
+import { resolveResponsiveChoice, useResponsiveLayout } from '../utils/responsive';
 
 type AppButtonProps = {
   label: string;
@@ -13,6 +15,37 @@ type AppButtonProps = {
   style?: StyleProp<ViewStyle>;
 };
 
+type ButtonMetrics = {
+  minHeight: number;
+  paddingHorizontal: number;
+};
+
+function getButtonMetrics(layout: ResponsiveLayout, compact: boolean): ButtonMetrics {
+  if (compact) {
+    return {
+      minHeight: resolveResponsiveChoice(layout, {
+        compact: 38,
+        defaultValue: 40,
+      }),
+      paddingHorizontal: resolveResponsiveChoice(layout, {
+        compact: spacing.md,
+        defaultValue: spacing.lg,
+      }),
+    };
+  }
+
+  return {
+    minHeight: resolveResponsiveChoice(layout, {
+      wide: 52,
+      defaultValue: 48,
+    }),
+    paddingHorizontal: resolveResponsiveChoice(layout, {
+      wide: spacing.xl + 4,
+      defaultValue: spacing.xl,
+    }),
+  };
+}
+
 export function AppButton({
   label,
   onPress,
@@ -22,6 +55,9 @@ export function AppButton({
   disabled = false,
   style,
 }: AppButtonProps) {
+  const layout = useResponsiveLayout();
+  const buttonMetrics = getButtonMetrics(layout, compact);
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -36,12 +72,17 @@ export function AppButton({
         compact && styles.compact,
         pressed && !disabled && styles.pressed,
         disabled && styles.disabled,
+        {
+          minHeight: buttonMetrics.minHeight,
+          paddingHorizontal: buttonMetrics.paddingHorizontal,
+        },
         style,
       ]}
     >
       <Text
         style={[
           styles.label,
+          layout.isWide && styles.labelWide,
           variant === 'primary' && styles.labelPrimary,
           variant === 'secondary' && styles.labelSecondary,
           variant === 'ghost' && styles.labelGhost,
@@ -55,19 +96,14 @@ export function AppButton({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 48,
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.xl,
     borderWidth: 1,
     borderColor: 'transparent',
     alignSelf: 'flex-start',
   },
-  compact: {
-    minHeight: 40,
-    paddingHorizontal: spacing.lg,
-  },
+  compact: {},
   fullWidth: {
     alignSelf: 'stretch',
   },
@@ -94,6 +130,9 @@ const styles = StyleSheet.create({
     fontSize: typography.body,
     fontWeight: '700',
     letterSpacing: 0.2,
+  },
+  labelWide: {
+    fontSize: 16,
   },
   labelPrimary: {
     color: colors.backgroundDeep,

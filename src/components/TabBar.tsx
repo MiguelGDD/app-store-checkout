@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing, typography } from '../theme';
 import type { TabId } from '../types';
 import { useI18n } from '../i18n';
+import { useResponsiveLayout } from '../utils/responsive';
 
 type TabBarProps = {
   activeTab: TabId;
@@ -12,6 +13,26 @@ type TabBarProps = {
 
 export function TabBar({ activeTab, cartCount, onNavigate }: TabBarProps) {
   const { t } = useI18n();
+  const layout = useResponsiveLayout();
+  const shellWidth = Math.min(
+    layout.width - layout.pagePadding * 2,
+    layout.contentMaxWidth,
+  );
+  const shellLeft = Math.max(
+    layout.pagePadding,
+    Math.round((layout.width - shellWidth) / 2),
+  );
+  const shellStyle = {
+    width: shellWidth,
+    left: shellLeft,
+    bottom: layout.isCompact ? spacing.sm : spacing.md,
+    paddingHorizontal: layout.isCompact ? spacing.xs : spacing.sm,
+    paddingVertical: layout.isCompact ? 6 : spacing.sm,
+    borderRadius: layout.isCompact ? radius.lg : radius.xl,
+  };
+  const labelSize = layout.isCompact ? 11 : typography.small;
+  const badgeSize = layout.isCompact ? 8 : 9;
+  const indicatorWidth = layout.isCompact ? 20 : 24;
   const tabs: Array<{ key: TabId; label: string }> = [
     { key: 'home', label: t('tab.home') },
     { key: 'catalog', label: t('tab.catalog') },
@@ -20,7 +41,7 @@ export function TabBar({ activeTab, cartCount, onNavigate }: TabBarProps) {
   ];
 
   return (
-    <View style={styles.shell}>
+    <View style={[styles.shell, shellStyle]}>
       {tabs.map((tab) => {
         const isActive = tab.key === activeTab;
         const showBadge = tab.key === 'cart' && cartCount > 0;
@@ -36,15 +57,25 @@ export function TabBar({ activeTab, cartCount, onNavigate }: TabBarProps) {
               pressed && styles.tabPressed,
             ]}
           >
-            <Text style={[styles.label, isActive && styles.labelActive]}>
+            <Text
+              style={[
+                styles.label,
+                { fontSize: labelSize },
+                isActive && styles.labelActive,
+              ]}
+            >
               {tab.label}
             </Text>
             {showBadge ? (
               <View style={styles.badge}>
-                <Text style={styles.badgeLabel}>{cartCount}</Text>
+                <Text style={[styles.badgeLabel, { fontSize: badgeSize }]}>
+                  {cartCount}
+                </Text>
               </View>
             ) : null}
-            {isActive ? <View style={styles.activeIndicator} /> : null}
+            {isActive ? (
+              <View style={[styles.activeIndicator, { width: indicatorWidth }]} />
+            ) : null}
           </Pressable>
         );
       })}
@@ -55,16 +86,10 @@ export function TabBar({ activeTab, cartCount, onNavigate }: TabBarProps) {
 const styles = StyleSheet.create({
   shell: {
     position: 'absolute',
-    left: spacing.md,
-    right: spacing.md,
-    bottom: spacing.md,
     flexDirection: 'row',
     backgroundColor: 'rgba(10, 15, 28, 0.96)',
-    borderRadius: radius.xl,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
     shadowColor: '#000',
     shadowOpacity: 0.32,
     shadowRadius: 20,
@@ -73,7 +98,7 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    minHeight: 52,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.lg,
@@ -107,13 +132,11 @@ const styles = StyleSheet.create({
   },
   badgeLabel: {
     color: colors.backgroundDeep,
-    fontSize: 9,
     fontWeight: '800',
   },
   activeIndicator: {
     position: 'absolute',
     bottom: 6,
-    width: 24,
     height: 3,
     borderRadius: radius.pill,
     backgroundColor: colors.primary,
