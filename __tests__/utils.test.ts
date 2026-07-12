@@ -1,5 +1,47 @@
 import { createResponsiveLayout } from '../src/utils/responsive';
-import { formatCurrency, formatOrderNumber, formatQuantity } from '../src/utils/format';
+import {
+  detectCardBrand,
+  isValidCardHolder,
+  isValidCardNumber,
+  isValidCvc,
+  isValidExpiry,
+  passesLuhnCheck,
+} from '../src/utils/cardValidation';
+import {
+  formatCurrency,
+  formatOrderNumber,
+  formatQuantity,
+} from '../src/utils/format';
+
+describe('credit card validation', () => {
+  test('detects VISA and both Mastercard ranges', () => {
+    expect(detectCardBrand('4242 4242')).toBe('visa');
+    expect(detectCardBrand('5555 5555')).toBe('mastercard');
+    expect(detectCardBrand('2221 0000')).toBe('mastercard');
+    expect(detectCardBrand('3400 0000')).toBe('unknown');
+  });
+
+  test('requires a supported card with a valid Luhn checksum', () => {
+    expect(passesLuhnCheck('4242424242424242')).toBe(true);
+    expect(isValidCardNumber('4242424242424242')).toBe(true);
+    expect(isValidCardNumber('5555555555554444')).toBe(true);
+    expect(isValidCardNumber('4242424242424241')).toBe(false);
+    expect(isValidCardNumber('378282246310005')).toBe(false);
+  });
+
+  test('validates holder, expiry and CVC structure', () => {
+    const now = new Date('2026-07-12T00:00:00.000Z');
+
+    expect(isValidCardHolder('Ana Perez')).toBe(true);
+    expect(isValidCardHolder('Ana')).toBe(false);
+    expect(isValidExpiry('07/26', now)).toBe(true);
+    expect(isValidExpiry('06/26', now)).toBe(false);
+    expect(isValidExpiry('13/29', now)).toBe(false);
+    expect(isValidCvc('123', 'visa')).toBe(true);
+    expect(isValidCvc('1234', 'mastercard')).toBe(false);
+    expect(isValidCvc('123', 'unknown')).toBe(false);
+  });
+});
 
 describe('format helpers', () => {
   test('formats currency in COP style', () => {
