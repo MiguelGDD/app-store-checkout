@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import type { StyleProp, TextStyle } from 'react-native';
 
 import { metrics, featuredProductId, flowSteps, products as demoProducts } from '../data/demo';
 import { colors, spacing, typography } from '../theme';
@@ -21,6 +22,7 @@ import { Pill } from '../components/Pill';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { SectionHeader } from '../components/SectionHeader';
 import { useI18n } from '../i18n';
+import { resolveResponsiveChoice } from '../utils/responsive';
 
 type HomeScreenProps = {
   layout: ResponsiveLayout;
@@ -75,6 +77,20 @@ export function HomeScreen({
     catalogItems[0] ??
     demoProducts[0];
   const metricCardWidth = getMetricCardWidth(layout);
+  const heroTitleLayoutStyle: StyleProp<TextStyle> = resolveResponsiveChoice(layout, {
+    compact: styles.heroTitleCompact,
+    wide: styles.heroTitleWide,
+    defaultValue: null,
+  });
+  const featureTitleLayoutStyle: StyleProp<TextStyle> = resolveResponsiveChoice(layout, {
+    compact: styles.featureTitleCompact,
+    wide: styles.featureTitleWide,
+    defaultValue: null,
+  });
+  const orderTitleLayoutStyle: StyleProp<TextStyle> = resolveResponsiveChoice(layout, {
+    compact: styles.orderTitleCompact,
+    defaultValue: null,
+  });
 
   return (
     <ScreenFrame layout={layout}>
@@ -93,7 +109,7 @@ export function HomeScreen({
           <Text
             style={[
               styles.heroTitle,
-              layout.isCompact ? styles.heroTitleCompact : layout.isWide ? styles.heroTitleWide : null,
+              heroTitleLayoutStyle,
             ]}
           >
             {t('home.heroTitle')}
@@ -142,7 +158,7 @@ export function HomeScreen({
           <Text
             style={[
               styles.featureTitle,
-              layout.isCompact ? styles.featureTitleCompact : layout.isWide ? styles.featureTitleWide : null,
+              featureTitleLayoutStyle,
             ]}
           >
             {featuredProduct.name}
@@ -177,7 +193,7 @@ export function HomeScreen({
             <Text
               style={[
                 styles.orderTitle,
-                layout.isCompact ? styles.orderTitleCompact : null,
+                orderTitleLayoutStyle,
               ]}
             >
               {t('common.orderNumber', { number: lastOrder.number })}

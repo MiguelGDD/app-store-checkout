@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import type { StyleProp, TextStyle } from 'react-native';
 
 import { colors, spacing, typography } from '../theme';
 import type {
@@ -14,6 +15,7 @@ import { Pill } from '../components/Pill';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { SectionHeader } from '../components/SectionHeader';
 import { useI18n } from '../i18n';
+import { resolveResponsiveChoice } from '../utils/responsive';
 
 type ResultTone = 'neutral' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
 
@@ -81,6 +83,11 @@ export function ConfirmationScreen({
     : t('confirmation.emptyDescription');
   const resultCopy =
     transactionStatus ? RESULT_COPY_BY_STATUS[transactionStatus] : EMPTY_RESULT_COPY;
+  const heroTitleLayoutStyle: StyleProp<TextStyle> = resolveResponsiveChoice(layout, {
+    compact: styles.heroTitleCompact,
+    wide: styles.heroTitleWide,
+    defaultValue: null,
+  });
 
   return (
     <ScreenFrame layout={layout}>
@@ -97,7 +104,7 @@ export function ConfirmationScreen({
           <Text
             style={[
               styles.heroTitle,
-              layout.isCompact ? styles.heroTitleCompact : layout.isWide ? styles.heroTitleWide : null,
+              heroTitleLayoutStyle,
             ]}
           >
             {orderNumber}

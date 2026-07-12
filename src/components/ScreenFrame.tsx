@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import type { ResponsiveLayout } from '../types';
+import { resolveResponsiveChoice } from '../utils/responsive';
 
 type ScreenFrameProps = {
   layout: ResponsiveLayout;
@@ -9,7 +10,11 @@ type ScreenFrameProps = {
 };
 
 export function ScreenFrame({ layout, children }: ScreenFrameProps) {
-  const contentPaddingTop = layout.isCompact ? 12 : layout.isWide ? 20 : 16;
+  const contentPaddingTop = resolveResponsiveChoice(layout, {
+    compact: 12,
+    wide: 20,
+    defaultValue: 16,
+  });
   const contentContainerStyle = {
     paddingHorizontal: layout.pagePadding,
     paddingBottom: layout.bottomPadding,

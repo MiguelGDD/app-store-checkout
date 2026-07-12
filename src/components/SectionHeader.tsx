@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
+import type { StyleProp, TextStyle, ViewStyle } from 'react-native';
 
 import { colors, spacing, typography } from '../theme';
-import { useResponsiveLayout } from '../utils/responsive';
+import { resolveResponsiveChoice, useResponsiveLayout } from '../utils/responsive';
 
 type SectionHeaderProps = {
   eyebrow: string;
@@ -15,32 +16,34 @@ export function SectionHeader({
   description,
 }: SectionHeaderProps) {
   const layout = useResponsiveLayout();
+  const containerLayoutStyle: StyleProp<ViewStyle> = resolveResponsiveChoice(layout, {
+    compact: styles.containerCompact,
+    defaultValue: styles.containerWide,
+  });
+  const eyebrowLayoutStyle: StyleProp<TextStyle> = resolveResponsiveChoice(layout, {
+    compact: styles.eyebrowCompact,
+    defaultValue: styles.eyebrowWide,
+  });
+  const titleLayoutStyle: StyleProp<TextStyle> = resolveResponsiveChoice(layout, {
+    compact: styles.titleCompact,
+    wide: styles.titleWide,
+    defaultValue: null,
+  });
+  const descriptionLayoutStyle: StyleProp<TextStyle> = resolveResponsiveChoice(layout, {
+    compact: styles.descriptionCompact,
+    defaultValue: styles.descriptionWide,
+  });
 
   return (
-    <View style={[styles.container, layout.isCompact ? styles.containerCompact : styles.containerWide]}>
-      <Text
-        style={[
-          styles.eyebrow,
-          layout.isCompact ? styles.eyebrowCompact : styles.eyebrowWide,
-        ]}
-      >
+    <View style={[styles.container, containerLayoutStyle]}>
+      <Text style={[styles.eyebrow, eyebrowLayoutStyle]}>
         {eyebrow}
       </Text>
-      <Text
-        style={[
-          styles.title,
-          layout.isCompact ? styles.titleCompact : layout.isWide ? styles.titleWide : null,
-        ]}
-      >
+      <Text style={[styles.title, titleLayoutStyle]}>
         {title}
       </Text>
       {description ? (
-        <Text
-          style={[
-            styles.description,
-            layout.isCompact ? styles.descriptionCompact : styles.descriptionWide,
-          ]}
-        >
+        <Text style={[styles.description, descriptionLayoutStyle]}>
           {description}
         </Text>
       ) : null}

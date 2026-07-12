@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 
 import { colors, radius, spacing } from '../theme';
-import { useResponsiveLayout } from '../utils/responsive';
+import { resolveResponsiveChoice, useResponsiveLayout } from '../utils/responsive';
 
 type AppCardProps = {
   children: ReactNode;
@@ -13,12 +13,17 @@ type AppCardProps = {
 
 export function AppCard({ children, style, tone = 'default' }: AppCardProps) {
   const layout = useResponsiveLayout();
+  const layoutStyle: StyleProp<ViewStyle> = resolveResponsiveChoice(layout, {
+    compact: styles.compact,
+    wide: styles.wide,
+    defaultValue: null,
+  });
 
   return (
     <View
       style={[
         styles.base,
-        layout.isCompact ? styles.compact : layout.isWide ? styles.wide : null,
+        layoutStyle,
         tone === 'hero' && styles.hero,
         tone === 'strong' && styles.strong,
         style,

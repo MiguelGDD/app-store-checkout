@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import type { StyleProp, TextStyle } from 'react-native';
 
 import { flowSteps } from '../data/demo';
 import { colors, spacing, typography } from '../theme';
@@ -12,6 +13,7 @@ import { Pill } from '../components/Pill';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { SectionHeader } from '../components/SectionHeader';
 import { useI18n } from '../i18n';
+import { resolveResponsiveChoice } from '../utils/responsive';
 
 type ProductDetailScreenProps = {
   layout: ResponsiveLayout;
@@ -57,6 +59,11 @@ export function ProductDetailScreen({
     quantityInCart > 0
       ? t('productDetail.addOneMore', { count: quantityInCart })
       : t('productDetail.addToCart');
+  const priceLayoutStyle: StyleProp<TextStyle> = resolveResponsiveChoice(layout, {
+    compact: styles.priceCompact,
+    wide: styles.priceWide,
+    defaultValue: null,
+  });
 
   return (
     <ScreenFrame layout={layout}>
@@ -76,7 +83,7 @@ export function ProductDetailScreen({
           <Text
             style={[
               styles.price,
-              layout.isCompact ? styles.priceCompact : layout.isWide ? styles.priceWide : null,
+              priceLayoutStyle,
             ]}
           >
             {formatCurrency(product.price)}
