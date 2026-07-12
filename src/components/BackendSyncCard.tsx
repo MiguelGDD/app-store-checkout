@@ -7,6 +7,8 @@ import { AppButton } from './AppButton';
 import { AppCard } from './AppCard';
 import { Pill } from './Pill';
 
+type PillTone = 'neutral' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
+
 type BackendSyncCardProps = {
   status: CatalogStatus;
   error: string | null;
@@ -15,31 +17,24 @@ type BackendSyncCardProps = {
   onRetry: () => void;
 };
 
-function resolveStatusLabel(status: CatalogStatus): string {
-  switch (status) {
-    case 'loading':
-      return 'Syncing';
-    case 'succeeded':
-      return 'Connected';
-    case 'failed':
-      return 'Needs attention';
-    default:
-      return 'Idle';
-  }
-}
+const STATUS_LABEL_BY_CATALOG_STATE: Record<CatalogStatus, string> = {
+  idle: 'Idle',
+  loading: 'Syncing',
+  succeeded: 'Connected',
+  failed: 'Needs attention',
+};
 
-function resolveTone(status: CatalogStatus) {
-  switch (status) {
-    case 'loading':
-      return 'primary' as const;
-    case 'succeeded':
-      return 'success' as const;
-    case 'failed':
-      return 'danger' as const;
-    default:
-      return 'neutral' as const;
-  }
-}
+const STATUS_TONE_BY_CATALOG_STATE: Record<CatalogStatus, PillTone> = {
+  idle: 'neutral',
+  loading: 'primary',
+  succeeded: 'success',
+  failed: 'danger',
+};
+
+const SOURCE_LABEL_BY_CATALOG_SOURCE: Record<CatalogSource, string> = {
+  backend: 'Remote catalog',
+  demo: 'Demo fallback',
+};
 
 export function BackendSyncCard({
   status,
@@ -51,14 +46,16 @@ export function BackendSyncCard({
   const isLoading = status === 'loading';
   const isSuccess = status === 'succeeded';
   const isError = status === 'failed';
+  const actionLabel = isError ? 'Retry sync' : 'Refresh catalog';
 
   return (
     <AppCard tone="strong" style={styles.card}>
       <View style={styles.header}>
-        <Pill label={resolveStatusLabel(status)} tone={resolveTone(status)} />
-        <Text style={styles.sourceLabel}>
-          {source === 'backend' ? 'Remote catalog' : 'Demo fallback'}
-        </Text>
+        <Pill
+          label={STATUS_LABEL_BY_CATALOG_STATE[status]}
+          tone={STATUS_TONE_BY_CATALOG_STATE[status]}
+        />
+        <Text style={styles.sourceLabel}>{SOURCE_LABEL_BY_CATALOG_SOURCE[source]}</Text>
       </View>
 
       <Text style={styles.title}>Backend API client</Text>
@@ -83,7 +80,7 @@ export function BackendSyncCard({
       {isError ? <Text style={styles.errorText}>{error}</Text> : null}
 
       <AppButton
-        label={isError ? 'Retry sync' : 'Refresh catalog'}
+        label={actionLabel}
         onPress={onRetry}
         variant="secondary"
         compact

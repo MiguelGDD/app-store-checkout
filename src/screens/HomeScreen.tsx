@@ -35,6 +35,24 @@ type HomeScreenProps = {
   onRetryCatalogSync: () => void;
 };
 
+const METRIC_ACCENTS = ['primary', 'secondary', 'success'] as const;
+
+function getMetricCardWidth(layout: ResponsiveLayout) {
+  if (layout.isWide) {
+    return '31%';
+  }
+
+  if (layout.isCompact) {
+    return '100%';
+  }
+
+  return '48%';
+}
+
+function getMetricAccent(index: number) {
+  return METRIC_ACCENTS[index] ?? 'success';
+}
+
 export function HomeScreen({
   layout,
   catalogItems,
@@ -52,11 +70,7 @@ export function HomeScreen({
     catalogItems.find((product) => product.id === featuredProductId) ??
     catalogItems[0] ??
     demoProducts[0];
-  const metricCardWidth = layout.isWide
-    ? '31%'
-    : layout.isCompact
-      ? '100%'
-      : '48%';
+  const metricCardWidth = getMetricCardWidth(layout);
 
   return (
     <ScreenFrame layout={layout}>
@@ -109,7 +123,7 @@ export function HomeScreen({
                 label={metric.label}
                 value={metric.value}
                 description={metric.description}
-                accent={index === 0 ? 'primary' : index === 1 ? 'secondary' : 'success'}
+                accent={getMetricAccent(index)}
               />
             </View>
           ))}

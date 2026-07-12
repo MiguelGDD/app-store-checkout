@@ -15,10 +15,17 @@ export const selectCheckoutActiveScreen = (state: RootState) =>
   state.checkout.activeScreen;
 export const selectCheckoutFlowIndex = (state: RootState) =>
   state.checkout.flowIndex;
+
+const ACTIVE_TAB_BY_SCREEN: Record<ScreenId, TabId> = {
+  home: 'home',
+  catalog: 'catalog',
+  cart: 'cart',
+  checkout: 'checkout',
+  confirmation: 'checkout',
+};
+
 export const selectActiveTab = (state: RootState): TabId =>
-  state.checkout.activeScreen === 'confirmation'
-    ? 'checkout'
-    : state.checkout.activeScreen;
+  ACTIVE_TAB_BY_SCREEN[state.checkout.activeScreen];
 export const selectLatestTransactionRecord = (state: RootState) =>
   state.transaction.latest;
 export const selectTransactionHydrated = (state: RootState) =>
