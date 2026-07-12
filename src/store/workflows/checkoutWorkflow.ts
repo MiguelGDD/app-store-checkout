@@ -9,9 +9,10 @@ import type {
 } from '../../infrastructure/backend/backendTypes';
 import { translate } from '../../i18n';
 import type { CardPaymentDetails, TransactionStatus } from '../../types';
-import type { AppThunk } from '../store';
+import type { AppDispatch, AppThunk } from '../store';
 import { selectCartCount, selectCartLineItems } from '../selectors';
 import { cartActions } from '../cart/cartSlice';
+import { catalogActions } from '../catalog/catalogSlice';
 import { checkoutActions } from '../checkout/checkoutSlice';
 import { transactionActions } from '../transaction/transactionSlice';
 
@@ -60,6 +61,21 @@ function buildRequest(
   };
 }
 
+function updatePurchasedStock(
+  dispatch: AppDispatch,
+  lineItems: ReturnType<typeof selectCartLineItems>,
+  direction: 1 | -1,
+) {
+  lineItems.forEach(({ product, quantity }) => {
+    dispatch(
+      catalogActions.adjustProductStock({
+        productId: product.id,
+        delta: quantity * direction,
+      }),
+    );
+  });
+}
+
 export function createCheckoutWorkflow(
   apiClient: CheckoutApiPort = backendStoreApiClient,
 ) {
@@ -90,10 +106,16 @@ export function createCheckoutWorkflow(
       }
 
       dispatch(checkoutActions.checkoutPaymentStarted());
+      // Sync inventory optimistically and roll back if the checkout is not approved.
+      updatePurchasedStock(dispatch, lineItems, -1);
 
       try {
         const response = await apiClient.createTransaction(request);
         const status = mapTransactionStatus(response.status);
+
+        if (status !== 'completed') {
+          updatePurchasedStock(dispatch, lineItems, 1);
+        }
 
         dispatch(
           transactionActions.recordTransaction({
@@ -124,6 +146,7 @@ export function createCheckoutWorkflow(
           }),
         );
       } catch {
+        updatePurchasedStock(dispatch, lineItems, 1);
         dispatch(
           checkoutActions.checkoutPaymentFailed({
             error: translate('checkout.paymentError'),

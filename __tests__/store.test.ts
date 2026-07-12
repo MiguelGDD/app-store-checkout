@@ -28,7 +28,7 @@ const payment: CardPaymentDetails = {
   cardHolder: 'Ana Perez',
 };
 
-function createBackendTransaction(status: 'APPROVED' | 'DECLINED') {
+function createBackendTransaction(status: 'APPROVED' | 'DECLINED' | 'PENDING') {
   return {
     id: 7,
     reference: 'backend-reference',
@@ -42,11 +42,33 @@ function createBackendTransaction(status: 'APPROVED' | 'DECLINED') {
   } as const;
 }
 
+type BackendTransaction = ReturnType<typeof createBackendTransaction>;
+
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+
+  const promise = new Promise<T>((promiseResolve) => {
+    resolve = promiseResolve;
+  });
+
+  return { promise, resolve };
+}
+
+function getCatalogStock(productId: string) {
+  const product = store
+    .getState()
+    .catalog.items.find((item) => item.id === productId);
+
+  return product?.stock ?? null;
+}
+
 function resetStore() {
   store.dispatch(cartActions.cartReset());
   store.dispatch(checkoutActions.checkoutReset());
   store.dispatch(transactionActions.clearTransactions());
-  store.dispatch(catalogActions.replaceCatalog(backendProducts));
+  store.dispatch(
+    catalogActions.replaceCatalog(backendProducts.map((product) => ({ ...product }))),
+  );
 }
 
 describe('redux workflow', () => {
@@ -84,18 +106,24 @@ describe('redux workflow', () => {
     });
   });
 
-  test('submits an approved backend checkout and clears the cart', async () => {
+  test('optimistically updates stock on approved checkout and clears the cart', async () => {
+    const initialStockOne = backendProducts[0].stock;
+    const initialStockTwo = backendProducts[1].stock;
+    const deferred = createDeferred<BackendTransaction>();
     const apiClient = {
-      createTransaction: jest
-        .fn()
-        .mockResolvedValue(createBackendTransaction('APPROVED')),
+      createTransaction: jest.fn().mockReturnValue(deferred.promise),
     };
     const submitCheckout = createCheckoutWorkflow(apiClient);
     store.dispatch(cartActions.itemAdded({ productId: backendProducts[0].id }));
     store.dispatch(cartActions.itemAdded({ productId: backendProducts[1].id }));
     store.dispatch(checkoutActions.navigateTo('checkout'));
 
-    await store.dispatch(submitCheckout(payment));
+    const checkoutPromise = store.dispatch(submitCheckout(payment));
+    expect(getCatalogStock(backendProducts[0].id)).toBe(initialStockOne - 1);
+    expect(getCatalogStock(backendProducts[1].id)).toBe(initialStockTwo - 1);
+
+    deferred.resolve(createBackendTransaction('APPROVED'));
+    await checkoutPromise;
 
     const state = store.getState();
     const summary = selectLatestOrderSummary(state);
@@ -121,9 +149,30 @@ describe('redux workflow', () => {
     expect(summary?.total).toBe(
       backendProducts[0].price + backendProducts[1].price,
     );
+    expect(getCatalogStock(backendProducts[0].id)).toBe(initialStockOne - 1);
+    expect(getCatalogStock(backendProducts[1].id)).toBe(initialStockTwo - 1);
+  });
+
+  test('rolls back the optimistic stock change for pending backend checkouts', async () => {
+    const initialStock = backendProducts[0].stock;
+    const apiClient = {
+      createTransaction: jest.fn().mockResolvedValue(createBackendTransaction('PENDING')),
+    };
+    const submitCheckout = createCheckoutWorkflow(apiClient);
+    store.dispatch(cartActions.itemAdded({ productId: backendProducts[0].id }));
+    store.dispatch(checkoutActions.navigateTo('checkout'));
+
+    await store.dispatch(submitCheckout(payment));
+
+    const state = store.getState();
+    expect(getCatalogStock(backendProducts[0].id)).toBe(initialStock);
+    expect(selectCartCount(state)).toBe(1);
+    expect(state.checkout.activeScreen).toBe('confirmation');
+    expect(selectLatestTransactionStatus(state)).toBe('pending');
   });
 
   test('keeps the cart when the backend declines the payment', async () => {
+    const initialStock = backendProducts[0].stock;
     const submitCheckout = createCheckoutWorkflow({
       createTransaction: jest
         .fn()
@@ -135,12 +184,14 @@ describe('redux workflow', () => {
     await store.dispatch(submitCheckout(payment));
 
     const state = store.getState();
+    expect(getCatalogStock(backendProducts[0].id)).toBe(initialStock);
     expect(selectCartCount(state)).toBe(1);
     expect(state.checkout.activeScreen).toBe('confirmation');
     expect(selectLatestTransactionStatus(state)).toBe('failed');
   });
 
   test('shows an error and preserves the cart when the API fails', async () => {
+    const initialStock = backendProducts[0].stock;
     const submitCheckout = createCheckoutWorkflow({
       createTransaction: jest.fn().mockRejectedValue(new Error('offline')),
     });
@@ -150,6 +201,7 @@ describe('redux workflow', () => {
     await store.dispatch(submitCheckout(payment));
 
     const state = store.getState();
+    expect(getCatalogStock(backendProducts[0].id)).toBe(initialStock);
     expect(selectCartCount(state)).toBe(1);
     expect(state.checkout.activeScreen).toBe('checkout');
     expect(state.checkout.isSubmitting).toBe(false);
