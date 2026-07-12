@@ -40,11 +40,8 @@ npm install
 cp .env.example .env
 ```
 
-Configura en `.env` la URL publica del backend, sin una barra final:
-
-```dotenv
-BACKEND_BASE_URL=http://165.22.180.227
-```
+Configura en `.env` la variable `BACKEND_BASE_URL` con la URL del backend, sin
+una barra final.
 
 En Android, crea `android/local.properties` si Android Studio no lo genero:
 

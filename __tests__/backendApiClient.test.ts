@@ -2,6 +2,7 @@ import {
   BackendApiError,
   createBackendStoreApiClient,
 } from '../src/infrastructure/backend/backendApiClient';
+import { backendConfig } from '../src/infrastructure/backend/backendConfig';
 
 type MockResponse = {
   ok: boolean;
@@ -59,7 +60,7 @@ describe('backend api client', () => {
       stock: 7,
     });
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://165.22.180.227/products',
+      `${backendConfig.baseUrl}/products`,
       expect.objectContaining({
         method: 'GET',
         headers: expect.objectContaining({
@@ -104,7 +105,7 @@ describe('backend api client', () => {
       transaction,
     );
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://165.22.180.227/transactions',
+      `${backendConfig.baseUrl}/transactions`,
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify(request),
