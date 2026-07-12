@@ -1,6 +1,7 @@
 import { colors } from '../../theme';
 import type { BackendProductDto } from './backendTypes';
 import type { Product } from '../../types';
+import { translate } from '../../i18n';
 
 const accentPalette = [
   colors.primary,
@@ -12,14 +13,18 @@ const accentPalette = [
 
 function resolveBadge(stock: number, index: number): string {
   if (stock <= 3) {
-    return 'Low stock';
+    return translate('backendBadge.lowStock');
   }
 
   if (stock <= 8) {
-    return index % 2 === 0 ? 'Hot' : 'Featured';
+    return index % 2 === 0
+      ? translate('backendBadge.hot')
+      : translate('backendBadge.featured');
   }
 
-  return index % 2 === 0 ? 'New' : 'Top pick';
+  return index % 2 === 0
+    ? translate('backendBadge.new')
+    : translate('backendBadge.topPick');
 }
 
 export function mapBackendProductToProduct(

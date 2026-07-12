@@ -11,6 +11,7 @@ import { FlowStepper } from '../components/FlowStepper';
 import { Pill } from '../components/Pill';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { SectionHeader } from '../components/SectionHeader';
+import { useI18n } from '../i18n';
 
 type ProductDetailScreenProps = {
   layout: ResponsiveLayout;
@@ -29,20 +30,22 @@ export function ProductDetailScreen({
   onNavigate,
   onAddToCart,
 }: ProductDetailScreenProps) {
+  const { t } = useI18n();
+
   if (!product) {
     return (
       <ScreenFrame layout={layout}>
         <View style={styles.stack}>
           <SectionHeader
-            eyebrow="Product detail"
-            title="Product not available"
-            description="The selected product could not be loaded from the current catalog."
+            eyebrow={t('productDetail.missingEyebrow')}
+            title={t('productDetail.missingTitle')}
+            description={t('productDetail.missingDescription')}
           />
 
           <EmptyState
-            title="Missing product"
-            description="Return to the catalog and open another product to continue the flow."
-            actionLabel="Back to catalog"
+            title={t('common.productMissing')}
+            description={t('productDetail.missingDescription')}
+            actionLabel={t('productDetail.missingAction')}
             onAction={() => onNavigate('catalog')}
           />
         </View>
@@ -50,27 +53,30 @@ export function ProductDetailScreen({
     );
   }
 
-  const actionLabel = quantityInCart > 0 ? `Add one more (${quantityInCart})` : 'Add to cart';
+  const actionLabel =
+    quantityInCart > 0
+      ? t('productDetail.addOneMore', { count: quantityInCart })
+      : t('productDetail.addToCart');
 
   return (
     <ScreenFrame layout={layout}>
       <View style={styles.stack}>
         <SectionHeader
-          eyebrow="Product detail"
+          eyebrow={t('productDetail.eyebrow')}
           title={product.name}
-          description="Inspect the product, add it to the cart and continue the checkout flow without leaving the shell."
+          description={t('productDetail.description')}
         />
 
         <AppCard tone="hero" style={styles.heroCard}>
           <View style={styles.heroTopRow}>
             <Pill label={product.badge} tone="primary" />
-            <Pill label={`${formatQuantity(product.stock)} in stock`} tone="neutral" />
+            <Pill label={t('common.inStock', { count: product.stock })} tone="neutral" />
           </View>
 
           <Text style={styles.price}>{formatCurrency(product.price)}</Text>
           <Text style={styles.description}>{product.description}</Text>
           <Text style={styles.meta}>
-            In cart: {formatQuantity(quantityInCart)}
+            {t('productDetail.inCart', { quantity: formatQuantity(quantityInCart) })}
           </Text>
 
           <View style={styles.actions}>
@@ -81,14 +87,14 @@ export function ProductDetailScreen({
               compact
             />
             <AppButton
-              label="Open cart"
+              label={t('productDetail.openCart')}
               onPress={() => onNavigate('cart')}
               variant="secondary"
               compact
               fullWidth
             />
             <AppButton
-              label="Back to catalog"
+              label={t('productDetail.backToCatalog')}
               onPress={() => onNavigate('catalog')}
               variant="ghost"
               compact
@@ -100,16 +106,13 @@ export function ProductDetailScreen({
         </AppCard>
 
         <AppCard style={styles.flowCard}>
-          <Text style={styles.sectionLabel}>Flow progress</Text>
+          <Text style={styles.sectionLabel}>{t('common.flowProgress')}</Text>
           <FlowStepper steps={flowSteps} activeIndex={flowIndex} />
         </AppCard>
 
         <AppCard style={styles.noteCard}>
-          <Text style={styles.noteTitle}>Why this screen exists</Text>
-          <Text style={styles.noteText}>
-            The detail view gives the reviewer a place to inspect the selected
-            product before moving it into cart review and checkout.
-          </Text>
+          <Text style={styles.noteTitle}>{t('productDetail.noteTitle')}</Text>
+          <Text style={styles.noteText}>{t('productDetail.noteText')}</Text>
         </AppCard>
       </View>
     </ScreenFrame>

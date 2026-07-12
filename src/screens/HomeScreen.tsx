@@ -20,6 +20,7 @@ import { MetricCard } from '../components/MetricCard';
 import { Pill } from '../components/Pill';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { SectionHeader } from '../components/SectionHeader';
+import { useI18n } from '../i18n';
 
 type HomeScreenProps = {
   layout: ResponsiveLayout;
@@ -68,6 +69,7 @@ export function HomeScreen({
   onOpenProduct,
   onRetryCatalogSync,
 }: HomeScreenProps) {
+  const { t } = useI18n();
   const featuredProduct =
     catalogItems.find((product) => product.id === featuredProductId) ??
     catalogItems[0] ??
@@ -78,25 +80,22 @@ export function HomeScreen({
     <ScreenFrame layout={layout}>
       <View style={styles.stack}>
         <SectionHeader
-          eyebrow="Task 4"
-          title="Checkout flow foundation"
-          description="This branch adds product detail, cart review, checkout, pending transaction creation and the final result screen."
+          eyebrow={t('home.eyebrow')}
+          title={t('home.title')}
+          description={t('home.description')}
         />
 
         <AppCard tone="hero" style={styles.heroCard}>
           <View style={styles.heroTopRow}>
-            <Pill label="Shell ready" tone="primary" />
+            <Pill label={t('home.shellReady')} tone="primary" />
             <Text style={styles.heroCount}>{formatQuantity(cartCount)}</Text>
           </View>
-          <Text style={styles.heroTitle}>Responsive checkout foundation</Text>
-          <Text style={styles.heroDescription}>
-            The layout stays compact on iPhone SE and opens up cleanly on larger
-            screens without depending on any navigation library.
-          </Text>
+          <Text style={styles.heroTitle}>{t('home.heroTitle')}</Text>
+          <Text style={styles.heroDescription}>{t('home.heroDescription')}</Text>
           <View style={styles.heroButtons}>
-            <AppButton label="Open catalog" onPress={() => onNavigate('catalog')} />
+            <AppButton label={t('common.openCatalog')} onPress={() => onNavigate('catalog')} />
             <AppButton
-              label="Review cart"
+              label={t('common.reviewCart')}
               onPress={() => onNavigate('cart')}
               variant="secondary"
               compact
@@ -132,18 +131,20 @@ export function HomeScreen({
         </View>
 
         <AppCard style={styles.featureCard}>
-          <Text style={styles.sectionLabel}>Featured product</Text>
+          <Text style={styles.sectionLabel}>{t('common.featuredProduct')}</Text>
           <Text style={styles.featureTitle}>{featuredProduct.name}</Text>
           <Text style={styles.featureDescription}>{featuredProduct.description}</Text>
           <View style={styles.featureFooter}>
             <Text style={styles.featurePrice}>
               {formatCurrency(featuredProduct.price)}
             </Text>
-            <Text style={styles.featureStock}>{featuredProduct.stock} items available</Text>
+            <Text style={styles.featureStock}>
+              {t('home.featuredStock', { count: featuredProduct.stock })}
+            </Text>
           </View>
           <View style={styles.featureActions}>
             <AppButton
-              label="View detail"
+              label={t('common.viewDetail')}
               onPress={() => onOpenProduct(featuredProduct.id)}
               variant="secondary"
               compact
@@ -152,19 +153,24 @@ export function HomeScreen({
         </AppCard>
 
         <AppCard style={styles.flowCard}>
-          <Text style={styles.sectionLabel}>Flow map</Text>
+          <Text style={styles.sectionLabel}>{t('common.flowMap')}</Text>
           <FlowStepper steps={flowSteps} activeIndex={flowIndex} />
         </AppCard>
 
         {lastOrder ? (
           <AppCard style={styles.orderCard}>
-            <Text style={styles.sectionLabel}>Latest order</Text>
-            <Text style={styles.orderTitle}>Order {lastOrder.number}</Text>
+            <Text style={styles.sectionLabel}>{t('common.latestOrder')}</Text>
+            <Text style={styles.orderTitle}>
+              {t('common.orderNumber', { number: lastOrder.number })}
+            </Text>
             <Text style={styles.orderDescription}>
-              {lastOrder.itemCount} items processed for {formatCurrency(lastOrder.total)}.
+              {t('common.orderItemsProcessed', {
+                count: lastOrder.itemCount,
+                total: formatCurrency(lastOrder.total),
+              })}
             </Text>
             <AppButton
-              label="Open confirmation"
+              label={t('common.openConfirmation')}
               onPress={() => onNavigate('confirmation')}
               variant="secondary"
               compact
@@ -172,11 +178,8 @@ export function HomeScreen({
           </AppCard>
         ) : (
           <AppCard style={styles.orderCard}>
-            <Text style={styles.sectionLabel}>Ready for checkout</Text>
-            <Text style={styles.orderDescription}>
-              Open the catalog, inspect a product, move through cart review and
-              then confirm the transaction from the checkout screen.
-            </Text>
+            <Text style={styles.sectionLabel}>{t('home.readyCardTitle')}</Text>
+            <Text style={styles.orderDescription}>{t('home.readyCardDescription')}</Text>
           </AppCard>
         )}
       </View>

@@ -10,6 +10,7 @@ import { CartLineItem } from '../components/CartLineItem';
 import { EmptyState } from '../components/EmptyState';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { SectionHeader } from '../components/SectionHeader';
+import { useI18n } from '../i18n';
 
 type CartItem = {
   product: Product;
@@ -37,46 +38,48 @@ export function CartScreen({
   onIncrement,
   onDecrement,
 }: CartScreenProps) {
+  const { t } = useI18n();
+
   return (
     <ScreenFrame layout={layout}>
       <View style={styles.stack}>
         <SectionHeader
-          eyebrow="Cart"
-          title="Review selected items"
-          description="This screen stays usable on narrow devices by stacking the summary under the line items."
+          eyebrow={t('cart.eyebrow')}
+          title={t('cart.title')}
+          description={t('cart.description')}
         />
 
         {items.length === 0 ? (
           <EmptyState
-            title="Your cart is empty"
-            description="Browse the catalog and add a few products before moving to checkout."
-            actionLabel="Open catalog"
+            title={t('cart.emptyTitle')}
+            description={t('cart.emptyDescription')}
+            actionLabel={t('cart.emptyAction')}
             onAction={() => onNavigate('catalog')}
           />
         ) : (
           <>
             <AppCard style={styles.summaryCard}>
               <View style={styles.summaryHeader}>
-                <Text style={styles.summaryTitle}>Order summary</Text>
+                <Text style={styles.summaryTitle}>{t('cart.summaryTitle')}</Text>
                 <Text style={styles.summaryMeta}>{formatQuantity(itemCount)}</Text>
               </View>
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Subtotal</Text>
+                <Text style={styles.summaryLabel}>{t('cart.summarySubtotal')}</Text>
                 <Text style={styles.summaryValue}>{formatCurrency(total)}</Text>
               </View>
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Delivery</Text>
-                <Text style={styles.summaryValue}>Included</Text>
+                <Text style={styles.summaryLabel}>{t('cart.summaryDelivery')}</Text>
+                <Text style={styles.summaryValue}>{t('cart.summaryIncluded')}</Text>
               </View>
               <View style={styles.summaryDivider} />
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Total</Text>
+                <Text style={styles.summaryLabel}>{t('cart.summaryTotal')}</Text>
                 <Text style={styles.summaryValueStrong}>{formatCurrency(total)}</Text>
               </View>
               <View style={styles.summaryButtons}>
-                <AppButton label="Go to checkout" onPress={() => onNavigate('checkout')} />
+                <AppButton label={t('cart.goToCheckout')} onPress={() => onNavigate('checkout')} />
                 <AppButton
-                  label="Keep browsing"
+                  label={t('cart.keepBrowsing')}
                   onPress={() => onNavigate('catalog')}
                   variant="secondary"
                   compact
@@ -100,10 +103,15 @@ export function CartScreen({
 
         {lastOrder ? (
           <AppCard style={styles.historyCard}>
-            <Text style={styles.historyLabel}>Previous order</Text>
-            <Text style={styles.historyTitle}>{lastOrder.number}</Text>
+            <Text style={styles.historyLabel}>{t('cart.previousOrder')}</Text>
+            <Text style={styles.historyTitle}>
+              {t('common.orderNumber', { number: lastOrder.number })}
+            </Text>
             <Text style={styles.historyDescription}>
-              {lastOrder.itemCount} items were confirmed for {formatCurrency(lastOrder.total)}.
+              {t('cart.previousOrderDescription', {
+                count: lastOrder.itemCount,
+                total: formatCurrency(lastOrder.total),
+              })}
             </Text>
           </AppCard>
         ) : null}

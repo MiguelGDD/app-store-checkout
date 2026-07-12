@@ -3,6 +3,7 @@ import type {
   BackendApiErrorPayload,
   BackendProductDto,
 } from './backendTypes';
+import { translate } from '../../i18n';
 
 export class BackendApiError extends Error {
   constructor(
@@ -53,7 +54,7 @@ async function requestJson<T>(
   init: RequestInitWithBody = {},
 ): Promise<T> {
   if (typeof fetch !== 'function') {
-    throw new BackendApiError('Fetch API is not available.', 0, null);
+    throw new BackendApiError(translate('backendApiClient.fetchUnavailable'), 0, null);
   }
 
   const response = await fetch(`${backendConfig.baseUrl}${path}`, {
@@ -77,7 +78,10 @@ async function requestJson<T>(
 
   if (!response.ok) {
     throw new BackendApiError(
-      resolveErrorMessage(parsedBody, `Request failed with status ${response.status}`),
+      resolveErrorMessage(
+        parsedBody,
+        translate('backendApiClient.requestFailed', { status: response.status }),
+      ),
       response.status,
       parsedBody,
     );

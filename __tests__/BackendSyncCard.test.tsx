@@ -27,21 +27,21 @@ function renderCard(
 describe('BackendSyncCard', () => {
   it('renders the idle state', () => {
     const renderer = renderCard('idle');
-    expect(JSON.stringify(renderer.toJSON())).toContain('Idle');
+    expect(JSON.stringify(renderer.toJSON())).toContain('Inactivo');
   });
 
   it('renders the loading state', () => {
     const renderer = renderCard('loading');
-    expect(JSON.stringify(renderer.toJSON())).toContain('Syncing');
+    expect(JSON.stringify(renderer.toJSON())).toContain('Sincronizando');
   });
 
   it('renders the success state', () => {
     const renderer = renderCard('succeeded');
-    expect(JSON.stringify(renderer.toJSON())).toContain('Connected');
+    expect(JSON.stringify(renderer.toJSON())).toContain('Conectado');
   });
 
   it('renders the error state', () => {
-    const renderer = renderCard('failed', 'Backend unavailable');
-    expect(JSON.stringify(renderer.toJSON())).toContain('Backend unavailable');
+    const renderer = renderCard('failed', 'No se pudo sincronizar el catalogo.');
+    expect(JSON.stringify(renderer.toJSON())).toContain('No se pudo sincronizar el catalogo.');
   });
 });

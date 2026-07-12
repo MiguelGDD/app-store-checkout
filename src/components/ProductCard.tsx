@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { colors, spacing, typography } from '../theme';
 import type { Product } from '../types';
 import { formatCurrency } from '../utils/format';
+import { useI18n } from '../i18n';
 import { AppCard } from './AppCard';
 import { AppButton } from './AppButton';
 import { Pill } from './Pill';
@@ -22,13 +23,14 @@ export function ProductCard({
   onAdd,
   onOpenDetails,
 }: ProductCardProps) {
+  const { t } = useI18n();
   const hasDetailAction = Boolean(onOpenDetails);
 
   return (
     <AppCard style={styles.card}>
       <View style={styles.header}>
         <Pill label={product.badge} tone="primary" />
-        <Text style={styles.stock}>{product.stock} in stock</Text>
+        <Text style={styles.stock}>{t('productCard.stock', { count: product.stock })}</Text>
       </View>
       <Text style={styles.name}>{product.name}</Text>
       <Text style={styles.description}>{product.description}</Text>
@@ -46,7 +48,7 @@ export function ProductCard({
           <AppButton
             compact
             fullWidth={compact}
-            label="View details"
+            label={t('productCard.viewDetails')}
             onPress={onOpenDetails}
             variant="secondary"
             style={!compact ? styles.actionButton : undefined}
@@ -55,7 +57,11 @@ export function ProductCard({
         <AppButton
           compact
           fullWidth={compact}
-          label={quantity > 0 ? `Add one more (${quantity})` : 'Add to cart'}
+          label={
+            quantity > 0
+              ? t('productCard.addOneMore', { count: quantity })
+              : t('productCard.addToCart')
+          }
           onPress={onAdd}
           style={!compact && hasDetailAction ? styles.actionButton : undefined}
         />

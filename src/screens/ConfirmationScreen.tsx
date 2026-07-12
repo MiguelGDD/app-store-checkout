@@ -13,6 +13,7 @@ import { AppCard } from '../components/AppCard';
 import { Pill } from '../components/Pill';
 import { ScreenFrame } from '../components/ScreenFrame';
 import { SectionHeader } from '../components/SectionHeader';
+import { useI18n } from '../i18n';
 
 type ResultTone = 'neutral' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
 
@@ -27,41 +28,40 @@ type ConfirmationScreenProps = {
 const RESULT_COPY_BY_STATUS: Record<
   TransactionStatus,
   {
-    label: string;
+    labelKey: 'confirmation.pendingLabel' | 'confirmation.completedLabel' | 'confirmation.failedLabel';
     tone: ResultTone;
-    title: string;
-    description: string;
+    titleKey: 'confirmation.pendingTitle' | 'confirmation.completedTitle' | 'confirmation.failedTitle';
+    descriptionKey:
+      | 'confirmation.pendingDescription'
+      | 'confirmation.completedDescription'
+      | 'confirmation.failedDescription';
   }
 > = {
   pending: {
-    label: 'Pending',
+    labelKey: 'confirmation.pendingLabel',
     tone: 'warning',
-    title: 'Transaction is pending',
-    description:
-      'The checkout workflow created the transaction and is waiting for the final payment resolution.',
+    titleKey: 'confirmation.pendingTitle',
+    descriptionKey: 'confirmation.pendingDescription',
   },
   completed: {
-    label: 'Completed',
+    labelKey: 'confirmation.completedLabel',
     tone: 'success',
-    title: 'Payment confirmed',
-    description:
-      'The pending transaction was resolved successfully and the order is ready to be delivered.',
+    titleKey: 'confirmation.completedTitle',
+    descriptionKey: 'confirmation.completedDescription',
   },
   failed: {
-    label: 'Failed',
+    labelKey: 'confirmation.failedLabel',
     tone: 'danger',
-    title: 'Payment failed',
-    description:
-      'The transaction was marked as failed. The cart can be retried without losing the shell state.',
+    titleKey: 'confirmation.failedTitle',
+    descriptionKey: 'confirmation.failedDescription',
   },
 };
 
 const EMPTY_RESULT_COPY = {
-  label: 'Awaiting order',
+  labelKey: 'confirmation.awaitingLabel' as const,
   tone: 'neutral' as ResultTone,
-  title: 'No transaction yet',
-  description:
-    'Complete an order from checkout to create the pending transaction and see the final result here.',
+  titleKey: 'confirmation.emptyTitle' as const,
+  descriptionKey: 'confirmation.emptyDescription' as const,
 };
 
 export function ConfirmationScreen({
@@ -71,10 +71,14 @@ export function ConfirmationScreen({
   cartCount,
   onNavigate,
 }: ConfirmationScreenProps) {
+  const { t } = useI18n();
   const orderNumber = lastOrder?.number ?? 'SC-000';
   const orderDescription = lastOrder
-    ? `${lastOrder.itemCount} items confirmed for ${formatCurrency(lastOrder.total)}.`
-    : 'Complete an order from checkout to populate this view.';
+    ? t('common.confirmedItemsTotal', {
+        count: lastOrder.itemCount,
+        total: formatCurrency(lastOrder.total),
+      })
+    : t('confirmation.emptyDescription');
   const resultCopy =
     transactionStatus ? RESULT_COPY_BY_STATUS[transactionStatus] : EMPTY_RESULT_COPY;
 
@@ -82,21 +86,21 @@ export function ConfirmationScreen({
     <ScreenFrame layout={layout}>
       <View style={styles.stack}>
         <SectionHeader
-          eyebrow="Result"
-          title="Transaction outcome"
-          description="The final screen reflects the transaction status after the checkout workflow creates the pending record."
+          eyebrow={t('confirmation.eyebrow')}
+          title={t('confirmation.title')}
+          description={t('confirmation.description')}
         />
 
         <AppCard tone="hero" style={styles.heroCard}>
-          <Pill label={resultCopy.label} tone={resultCopy.tone} />
-          <Text style={styles.resultTitle}>{resultCopy.title}</Text>
+          <Pill label={t(resultCopy.labelKey)} tone={resultCopy.tone} />
+          <Text style={styles.resultTitle}>{t(resultCopy.titleKey)}</Text>
           <Text style={styles.heroTitle}>{orderNumber}</Text>
-          <Text style={styles.heroDescription}>{resultCopy.description}</Text>
+          <Text style={styles.heroDescription}>{t(resultCopy.descriptionKey)}</Text>
           <Text style={styles.orderDescription}>{orderDescription}</Text>
           <View style={styles.heroButtons}>
-            <AppButton label="Back to home" onPress={() => onNavigate('home')} />
+            <AppButton label={t('confirmation.backToHome')} onPress={() => onNavigate('home')} />
             <AppButton
-              label={`Open cart (${cartCount})`}
+              label={t('confirmation.openCart', { count: cartCount })}
               onPress={() => onNavigate('cart')}
               variant="secondary"
               compact
@@ -105,12 +109,8 @@ export function ConfirmationScreen({
         </AppCard>
 
         <AppCard style={styles.noteCard}>
-          <Text style={styles.noteTitle}>What the flow already covers</Text>
-          <Text style={styles.noteText}>
-            The app shell now covers product detail, cart review, checkout and
-            a transaction result screen that can represent pending, completed
-            or failed states.
-          </Text>
+          <Text style={styles.noteTitle}>{t('confirmation.noteTitle')}</Text>
+          <Text style={styles.noteText}>{t('confirmation.noteText')}</Text>
         </AppCard>
       </View>
     </ScreenFrame>
