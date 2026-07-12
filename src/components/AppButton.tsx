@@ -11,6 +11,8 @@ import {
 type AppButtonProps = {
   label: string;
   onPress: () => void;
+  testID?: string;
+  accessibilityLabel?: string;
   variant?: 'primary' | 'secondary' | 'ghost';
   fullWidth?: boolean;
   compact?: boolean;
@@ -55,6 +57,8 @@ function getButtonMetrics(
 export function AppButton({
   label,
   onPress,
+  testID,
+  accessibilityLabel,
   variant = 'primary',
   fullWidth = false,
   compact = false,
@@ -66,6 +70,8 @@ export function AppButton({
 
   return (
     <Pressable
+      testID={testID}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityRole="button"
       disabled={disabled}
       onPress={onPress}
