@@ -1,6 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit';
 
-import type { OrderSummary, ScreenId, TabId } from '../types';
+import type { OrderSummary, Product, ScreenId, TabId, TransactionStatus } from '../types';
 import type { RootState } from './store';
 import { screenToFlowIndex } from './checkout/checkoutSlice';
 
@@ -15,10 +15,13 @@ export const selectCheckoutActiveScreen = (state: RootState) =>
   state.checkout.activeScreen;
 export const selectCheckoutFlowIndex = (state: RootState) =>
   state.checkout.flowIndex;
+export const selectSelectedProductId = (state: RootState) =>
+  state.checkout.selectedProductId;
 
 const ACTIVE_TAB_BY_SCREEN: Record<ScreenId, TabId> = {
   home: 'home',
   catalog: 'catalog',
+  productDetail: 'catalog',
   cart: 'cart',
   checkout: 'checkout',
   confirmation: 'checkout',
@@ -28,8 +31,22 @@ export const selectActiveTab = (state: RootState): TabId =>
   ACTIVE_TAB_BY_SCREEN[state.checkout.activeScreen];
 export const selectLatestTransactionRecord = (state: RootState) =>
   state.transaction.latest;
+export const selectLatestTransactionStatus = (
+  state: RootState,
+): TransactionStatus | null => state.transaction.latest?.summary.status ?? null;
 export const selectTransactionHydrated = (state: RootState) =>
   state.transaction.hydrated;
+
+export const selectSelectedProduct = createSelector(
+  [selectCatalogItems, selectSelectedProductId],
+  (catalogItems, selectedProductId): Product | null => {
+    if (!selectedProductId) {
+      return null;
+    }
+
+    return catalogItems.find((product) => product.id === selectedProductId) ?? null;
+  },
+);
 
 export const selectCartLineItems = createSelector(
   [selectCatalogItems, selectCartItemsMap],

@@ -32,6 +32,7 @@ type HomeScreenProps = {
   lastOrder: OrderSummary | null;
   flowIndex: number;
   onNavigate: (screen: ScreenId) => void;
+  onOpenProduct: (productId: string) => void;
   onRetryCatalogSync: () => void;
 };
 
@@ -64,6 +65,7 @@ export function HomeScreen({
   lastOrder,
   flowIndex,
   onNavigate,
+  onOpenProduct,
   onRetryCatalogSync,
 }: HomeScreenProps) {
   const featuredProduct =
@@ -76,9 +78,9 @@ export function HomeScreen({
     <ScreenFrame layout={layout}>
       <View style={styles.stack}>
         <SectionHeader
-          eyebrow="Task 1"
-          title="App shell and navigation"
-          description="This base defines the store checkout flow, the reusable layout pieces and the screen navigation that will be extended in the next tasks."
+          eyebrow="Task 4"
+          title="Checkout flow foundation"
+          description="This branch adds product detail, cart review, checkout, pending transaction creation and the final result screen."
         />
 
         <AppCard tone="hero" style={styles.heroCard}>
@@ -139,6 +141,14 @@ export function HomeScreen({
             </Text>
             <Text style={styles.featureStock}>{featuredProduct.stock} items available</Text>
           </View>
+          <View style={styles.featureActions}>
+            <AppButton
+              label="View detail"
+              onPress={() => onOpenProduct(featuredProduct.id)}
+              variant="secondary"
+              compact
+            />
+          </View>
         </AppCard>
 
         <AppCard style={styles.flowCard}>
@@ -162,10 +172,10 @@ export function HomeScreen({
           </AppCard>
         ) : (
           <AppCard style={styles.orderCard}>
-            <Text style={styles.sectionLabel}>Ready for task 2</Text>
+            <Text style={styles.sectionLabel}>Ready for checkout</Text>
             <Text style={styles.orderDescription}>
-              The next branch can plug the backend contract and payment state into
-              this shell without changing the screen structure.
+              Open the catalog, inspect a product, move through cart review and
+              then confirm the transaction from the checkout screen.
             </Text>
           </AppCard>
         )}
@@ -247,6 +257,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     marginTop: spacing.sm,
+  },
+  featureActions: {
+    marginTop: spacing.xs,
   },
   featurePrice: {
     color: colors.text,

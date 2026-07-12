@@ -23,6 +23,7 @@ type CatalogScreenProps = {
   catalogLastSyncedAt: string | null;
   cartQuantities: Record<string, number>;
   onAddToCart: (productId: string) => void;
+  onOpenProduct: (productId: string) => void;
   onRetryCatalogSync: () => void;
 };
 
@@ -35,6 +36,7 @@ export function CatalogScreen({
   catalogLastSyncedAt,
   cartQuantities,
   onAddToCart,
+  onOpenProduct,
   onRetryCatalogSync,
 }: CatalogScreenProps) {
   const productCardWidth = layout.gridColumns > 1 ? '48%' : '100%';
@@ -45,7 +47,7 @@ export function CatalogScreen({
         <SectionHeader
           eyebrow="Catalog"
           title="Browse products"
-          description="The grid switches between one and two columns based on the available width so the layout keeps breathing room on small screens."
+          description="The grid switches between one and two columns based on the available width so the layout keeps breathing room on small screens. Open any product to inspect its detail before sending it to the cart."
         />
 
         <BackendSyncCard
@@ -60,7 +62,7 @@ export function CatalogScreen({
           <Text style={styles.noteTitle}>Navigation preview</Text>
           <Text style={styles.noteDescription}>
             Add products from the remote catalog, move into cart review, then
-            continue to checkout and confirmation with the same shell.
+            continue to checkout and the final result screen with the same shell.
           </Text>
         </AppCard>
 
@@ -86,6 +88,7 @@ export function CatalogScreen({
                     quantity={quantity}
                     compact={layout.isCompact}
                     onAdd={() => onAddToCart(product.id)}
+                    onOpenDetails={() => onOpenProduct(product.id)}
                   />
                 </View>
               );

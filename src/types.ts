@@ -1,6 +1,12 @@
-export type ScreenId = 'home' | 'catalog' | 'cart' | 'checkout' | 'confirmation';
+export type ScreenId =
+  | 'home'
+  | 'catalog'
+  | 'productDetail'
+  | 'cart'
+  | 'checkout'
+  | 'confirmation';
 
-export type TabId = Exclude<ScreenId, 'confirmation'>;
+export type TabId = Exclude<ScreenId, 'productDetail' | 'confirmation'>;
 
 export type Product = {
   id: string;

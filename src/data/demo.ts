@@ -69,20 +69,28 @@ export const metrics: Metric[] = [
 
 export const flowSteps: FlowStep[] = [
   {
-    title: 'Discover',
-    description: 'Open the shell, review the layout and move into the catalog.',
+    title: 'Shell',
+    description: 'Open the app shell and review the responsive layout.',
   },
   {
-    title: 'Select',
-    description: 'Add products to the cart and keep the state in sync.',
+    title: 'Catalog',
+    description: 'Browse products and jump into the detail screen.',
   },
   {
-    title: 'Review',
-    description: 'Inspect the cart, quantities and totals before checkout.',
+    title: 'Detail',
+    description: 'Inspect the selected product before adding it.',
   },
   {
-    title: 'Confirm',
-    description: 'Finish the flow and land on the confirmation screen.',
+    title: 'Cart',
+    description: 'Inspect quantities and totals before checkout.',
+  },
+  {
+    title: 'Checkout',
+    description: 'Create the pending transaction and confirm the payment state.',
+  },
+  {
+    title: 'Result',
+    description: 'Show the final transaction outcome on the result screen.',
   },
 ];
 

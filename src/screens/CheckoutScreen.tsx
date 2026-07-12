@@ -43,8 +43,8 @@ export function CheckoutScreen({
       <View style={styles.stack}>
         <SectionHeader
           eyebrow="Checkout"
-          title="Confirm payment shell"
-          description="This screen is intentionally structured for the future payment integration. The flow already knows how to land on a confirmation view."
+          title="Create pending transaction"
+          description="This screen is intentionally structured for the payment flow. The checkout action creates a pending transaction in the store before the final result view resolves the outcome."
         />
 
         <AppCard style={styles.stepCard}>
@@ -67,7 +67,8 @@ export function CheckoutScreen({
               <Text style={styles.reviewDescription}>
                 The cart data is already connected to the shell, so the backend
                 and payment payload can be plugged in later without rewriting the
-                navigation.
+                navigation. Submitting this form creates a pending transaction in
+                the store first.
               </Text>
               <View style={styles.reviewLines}>
                 {items.map((item) => (
@@ -89,7 +90,7 @@ export function CheckoutScreen({
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Payment</Text>
-                <Text style={styles.summaryValue}>Sandbox ready</Text>
+                <Text style={styles.summaryValue}>Pending transaction</Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Total</Text>
