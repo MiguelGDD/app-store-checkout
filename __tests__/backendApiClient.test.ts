@@ -1,4 +1,7 @@
-import { BackendApiError, createBackendStoreApiClient } from '../src/infrastructure/backend/backendApiClient';
+import {
+  BackendApiError,
+  createBackendStoreApiClient,
+} from '../src/infrastructure/backend/backendApiClient';
 
 type MockResponse = {
   ok: boolean;
@@ -59,6 +62,52 @@ describe('backend api client', () => {
       'http://165.22.180.227/products',
       expect.objectContaining({
         method: 'GET',
+        headers: expect.objectContaining({
+          'x-api-key': 'change-me',
+        }),
+      }),
+    );
+  });
+
+  it('creates a backend payment transaction', async () => {
+    const transaction = {
+      id: 7,
+      reference: 'checkout-reference',
+      totalAmount: 2500000,
+      baseFee: 2500000,
+      deliveryFee: 0,
+      status: 'APPROVED',
+      bankTransactionId: 'bank-7',
+      createAt: '2026-07-12T00:00:00.000Z',
+      updateAt: '2026-07-12T00:01:00.000Z',
+    };
+    const request = {
+      customerId: 1,
+      deliveryFee: 0,
+      items: [{ productId: 1, quantity: 1 }],
+      payment: {
+        number: '4242424242424242',
+        expMonth: '12',
+        expYear: '29',
+        cvc: '123',
+        cardHolder: 'Ana Perez',
+      },
+    };
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValue(createResponse(201, JSON.stringify(transaction)));
+    globalWithFetch.fetch = fetchMock as unknown as typeof fetch;
+
+    const client = createBackendStoreApiClient();
+
+    await expect(client.createTransaction(request)).resolves.toEqual(
+      transaction,
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://165.22.180.227/transactions',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify(request),
         headers: expect.objectContaining({
           'x-api-key': 'change-me',
         }),

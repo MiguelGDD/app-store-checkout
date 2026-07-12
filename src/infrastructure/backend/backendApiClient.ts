@@ -1,7 +1,9 @@
 import { backendConfig } from './backendConfig';
 import type {
   BackendApiErrorPayload,
+  BackendCreateTransactionInput,
   BackendProductDto,
+  BackendTransactionDto,
 } from './backendTypes';
 import { translate } from '../../i18n';
 
@@ -54,7 +56,11 @@ async function requestJson<T>(
   init: RequestInitWithBody = {},
 ): Promise<T> {
   if (typeof fetch !== 'function') {
-    throw new BackendApiError(translate('backendApiClient.fetchUnavailable'), 0, null);
+    throw new BackendApiError(
+      translate('backendApiClient.fetchUnavailable'),
+      0,
+      null,
+    );
   }
 
   const response = await fetch(`${backendConfig.baseUrl}${path}`, {
@@ -65,22 +71,22 @@ async function requestJson<T>(
       'x-api-key': backendConfig.apiKey,
       ...(init.headers ?? {}),
     },
-    body:
-      init.body === undefined
-        ? undefined
-        : JSON.stringify(init.body),
+    body: init.body === undefined ? undefined : JSON.stringify(init.body),
     signal: init.signal,
   });
 
-  const parsedBody = (await parseResponseBody(
-    response,
-  )) as BackendApiErrorPayload | string | null;
+  const parsedBody = (await parseResponseBody(response)) as
+    | BackendApiErrorPayload
+    | string
+    | null;
 
   if (!response.ok) {
     throw new BackendApiError(
       resolveErrorMessage(
         parsedBody,
-        translate('backendApiClient.requestFailed', { status: response.status }),
+        translate('backendApiClient.requestFailed', {
+          status: response.status,
+        }),
       ),
       response.status,
       parsedBody,
@@ -92,11 +98,19 @@ async function requestJson<T>(
 
 export type BackendStoreApiPort = {
   getProducts(): Promise<BackendProductDto[]>;
+  createTransaction(
+    input: BackendCreateTransactionInput,
+  ): Promise<BackendTransactionDto>;
 };
 
 export function createBackendStoreApiClient(): BackendStoreApiPort {
   return {
     getProducts: () => requestJson<BackendProductDto[]>('/products'),
+    createTransaction: input =>
+      requestJson<BackendTransactionDto>('/transactions', {
+        method: 'POST',
+        body: input,
+      }),
   };
 }
 

@@ -9,33 +9,33 @@ type PillProps = {
 
 const toneStyles = {
   neutral: {
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: colors.backgroundSoft,
     borderColor: colors.border,
     textColor: colors.textMuted,
   },
   primary: {
-    backgroundColor: 'rgba(255, 138, 61, 0.14)',
-    borderColor: 'rgba(255, 138, 61, 0.28)',
+    backgroundColor: '#E2EEE8',
+    borderColor: '#BED5CA',
     textColor: colors.primary,
   },
   secondary: {
-    backgroundColor: 'rgba(57, 208, 179, 0.14)',
-    borderColor: 'rgba(57, 208, 179, 0.28)',
+    backgroundColor: '#F8E9E3',
+    borderColor: '#EAC5B8',
     textColor: colors.secondary,
   },
   success: {
-    backgroundColor: 'rgba(85, 214, 138, 0.14)',
-    borderColor: 'rgba(85, 214, 138, 0.28)',
+    backgroundColor: '#E4F1E8',
+    borderColor: '#BED8C6',
     textColor: colors.success,
   },
   warning: {
-    backgroundColor: 'rgba(244, 184, 74, 0.14)',
-    borderColor: 'rgba(244, 184, 74, 0.28)',
+    backgroundColor: '#FAEEDB',
+    borderColor: '#E7CCA1',
     textColor: colors.warning,
   },
   danger: {
-    backgroundColor: 'rgba(255, 109, 122, 0.14)',
-    borderColor: 'rgba(255, 109, 122, 0.28)',
+    backgroundColor: '#F8E5E2',
+    borderColor: '#E5BBB5',
     textColor: colors.danger,
   },
 };

@@ -4,9 +4,13 @@ export type ScreenId =
   | 'productDetail'
   | 'cart'
   | 'checkout'
+  | 'history'
   | 'confirmation';
 
-export type TabId = Exclude<ScreenId, 'productDetail' | 'confirmation'>;
+export type TabId = Exclude<
+  ScreenId,
+  'home' | 'productDetail' | 'confirmation'
+>;
 
 export type Product = {
   id: string;
@@ -24,6 +28,14 @@ export type CatalogStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
 export type CatalogSource = 'demo' | 'backend';
 
 export type CartMap = Record<string, number>;
+
+export type CardPaymentDetails = {
+  number: string;
+  expMonth: string;
+  expYear: string;
+  cvc: string;
+  cardHolder: string;
+};
 
 export type OrderSummary = {
   number: string;

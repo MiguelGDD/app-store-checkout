@@ -30,10 +30,9 @@ export function ScreenFrame({ layout, children }: ScreenFrameProps) {
       style={styles.scroll}
       contentContainerStyle={[styles.content, contentContainerStyle]}
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
     >
-      <View style={[styles.inner, innerStyle]}>
-        {children}
-      </View>
+      <View style={[styles.inner, innerStyle]}>{children}</View>
     </ScrollView>
   );
 }

@@ -3,7 +3,10 @@ import type { StyleProp, ViewStyle } from 'react-native';
 
 import { colors, radius, spacing, typography } from '../theme';
 import type { ResponsiveLayout } from '../types';
-import { resolveResponsiveChoice, useResponsiveLayout } from '../utils/responsive';
+import {
+  resolveResponsiveChoice,
+  useResponsiveLayout,
+} from '../utils/responsive';
 
 type AppButtonProps = {
   label: string;
@@ -20,7 +23,10 @@ type ButtonMetrics = {
   paddingHorizontal: number;
 };
 
-function getButtonMetrics(layout: ResponsiveLayout, compact: boolean): ButtonMetrics {
+function getButtonMetrics(
+  layout: ResponsiveLayout,
+  compact: boolean,
+): ButtonMetrics {
   if (compact) {
     return {
       minHeight: resolveResponsiveChoice(layout, {
@@ -112,8 +118,8 @@ const styles = StyleSheet.create({
     borderColor: colors.primaryStrong,
   },
   secondary: {
-    backgroundColor: colors.surfaceHighlight,
-    borderColor: colors.borderStrong,
+    backgroundColor: colors.surface,
+    borderColor: colors.primary,
   },
   ghost: {
     backgroundColor: 'transparent',
@@ -135,10 +141,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   labelPrimary: {
-    color: colors.backgroundDeep,
+    color: colors.surface,
   },
   labelSecondary: {
-    color: colors.text,
+    color: colors.primary,
   },
   labelGhost: {
     color: colors.textMuted,

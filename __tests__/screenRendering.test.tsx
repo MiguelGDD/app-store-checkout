@@ -1,4 +1,5 @@
 import React from 'react';
+import { TextInput } from 'react-native';
 import ReactTestRenderer from 'react-test-renderer';
 
 import { TabBar } from '../src/components/TabBar';
@@ -8,10 +9,20 @@ import { CartScreen } from '../src/screens/CartScreen';
 import { CheckoutScreen } from '../src/screens/CheckoutScreen';
 import { CatalogScreen } from '../src/screens/CatalogScreen';
 import { ConfirmationScreen } from '../src/screens/ConfirmationScreen';
+import { HistoryScreen } from '../src/screens/HistoryScreen';
 import { HomeScreen } from '../src/screens/HomeScreen';
 import { ProductDetailScreen } from '../src/screens/ProductDetailScreen';
-import { createResponsiveLayout, useResponsiveLayout } from '../src/utils/responsive';
-import type { OrderSummary, Product, ResponsiveLayout } from '../src/types';
+import {
+  createResponsiveLayout,
+  useResponsiveLayout,
+} from '../src/utils/responsive';
+import type {
+  OrderSummary,
+  Product,
+  ResponsiveLayout,
+  TransactionStatus,
+  TransactionSummary,
+} from '../src/types';
 
 jest.mock('../src/utils/responsive', () => {
   const actual = jest.requireActual('../src/utils/responsive');
@@ -55,6 +66,21 @@ function createOrderSummary(): OrderSummary {
   };
 }
 
+function createTransactionSummary(
+  status: TransactionStatus,
+  index: number,
+): TransactionSummary {
+  return {
+    transactionId: `txn-${index}`,
+    number: `88701886-5f4e-4601-9282-5bb5089d402${index}`,
+    itemCount: index,
+    total: 2500000 * index,
+    status,
+    createdAt: `2026-07-12T0${index}:00:00.000Z`,
+    updatedAt: `2026-07-12T0${index}:00:00.000Z`,
+  };
+}
+
 function renderProduct(): Product {
   return {
     ...products[0],
@@ -82,9 +108,9 @@ describe('screen rendering', () => {
     );
 
     const output = textContent(renderer);
-    expect(output).toContain('Base responsive para el flujo de compra');
-    expect(output).toContain('Pedido SC-009');
-    expect(output).toContain('Abrir catalogo');
+    expect(output).toContain('Compra simple, pago seguro');
+    expect(output).toContain('SC-009');
+    expect(output).toContain('Ver productos');
   });
 
   it('renders the home screen fallback card when there is no order', () => {
@@ -106,7 +132,7 @@ describe('screen rendering', () => {
       wideLayout,
     );
 
-    expect(textContent(renderer)).toContain('Listo para pagar');
+    expect(textContent(renderer)).toContain('Compra simple, pago seguro');
   });
 
   it('renders the catalog screen in both empty and populated states', () => {
@@ -126,7 +152,9 @@ describe('screen rendering', () => {
       wideLayout,
     );
 
-    expect(textContent(emptyRenderer)).toContain('No hay productos disponibles');
+    expect(textContent(emptyRenderer)).toContain(
+      'No hay productos disponibles',
+    );
 
     const populatedRenderer = renderWithI18n(
       <CatalogScreen
@@ -146,7 +174,7 @@ describe('screen rendering', () => {
 
     const output = textContent(populatedRenderer);
     expect(output).toContain(products[0].name);
-    expect(output).toContain('Agregar uno mas (2)');
+    expect(output).toContain('Agregar (2)');
   });
 
   it('renders the cart screen with empty and populated content', () => {
@@ -186,8 +214,8 @@ describe('screen rendering', () => {
     );
 
     const output = textContent(populatedRenderer);
-    expect(output).toContain('Resumen del pedido');
-    expect(output).toContain('Pedido anterior');
+    expect(output).toContain('Subtotal');
+    expect(output).toContain('Ir al pago');
   });
 
   it('renders the checkout screen for empty and populated carts', () => {
@@ -199,14 +227,19 @@ describe('screen rendering', () => {
         total={0}
         lastOrder={null}
         flowIndex={4}
+        isSubmitting={false}
+        paymentError={null}
         onNavigate={jest.fn()}
         onPlaceOrder={jest.fn()}
       />,
       compactLayout,
     );
 
-    expect(textContent(emptyRenderer)).toContain('Aun no hay nada por confirmar');
+    expect(textContent(emptyRenderer)).toContain(
+      'Aun no hay nada por confirmar',
+    );
 
+    const onPlaceOrder = jest.fn();
     const populatedRenderer = renderWithI18n(
       <CheckoutScreen
         layout={wideLayout}
@@ -220,15 +253,48 @@ describe('screen rendering', () => {
         total={products[0].price * 2}
         lastOrder={createOrderSummary()}
         flowIndex={4}
+        isSubmitting={false}
+        paymentError={null}
         onNavigate={jest.fn()}
-        onPlaceOrder={jest.fn()}
+        onPlaceOrder={onPlaceOrder}
       />,
       wideLayout,
     );
 
     const output = textContent(populatedRenderer);
-    expect(output).toContain('Resumen');
-    expect(output).toContain('Ultimo pedido confirmado');
+    expect(output).toContain('Tarjeta de credito');
+    expect(output).toContain('Sandbox');
+
+    const inputs = populatedRenderer.root.findAllByType(TextInput);
+    ReactTestRenderer.act(() => {
+      inputs[0].props.onChangeText('Ana Perez');
+      inputs[1].props.onChangeText('4242424242424242');
+      inputs[2].props.onChangeText('1229');
+      inputs[3].props.onChangeText('123');
+    });
+
+    expect(inputs[1].props.value).toBe('4242 4242 4242 4242');
+    expect(inputs[2].props.value).toBe('12/29');
+
+    const paymentButtons = populatedRenderer.root.findAll(
+      node =>
+        typeof node.props.onPress === 'function' &&
+        node.props.disabled === false,
+    );
+    const paymentButton = paymentButtons[0];
+    expect(paymentButton.props.disabled).toBe(false);
+
+    ReactTestRenderer.act(() => {
+      paymentButton.props.onPress();
+    });
+    expect(onPlaceOrder).toHaveBeenCalledTimes(1);
+    expect(onPlaceOrder).toHaveBeenCalledWith({
+      number: '4242424242424242',
+      expMonth: '12',
+      expYear: '29',
+      cvc: '123',
+      cardHolder: 'Ana Perez',
+    });
   });
 
   it('renders the product detail screen for missing and selected products', () => {
@@ -264,6 +330,7 @@ describe('screen rendering', () => {
   });
 
   it('renders the confirmation screen for empty, pending and completed transactions', () => {
+    const fullOrderId = '88701886-5f4e-4601-9282-5bb5089d402c';
     const emptyRenderer = renderWithI18n(
       <ConfirmationScreen
         layout={compactLayout}
@@ -288,12 +355,14 @@ describe('screen rendering', () => {
       wideLayout,
     );
 
-    expect(textContent(pendingRenderer)).toContain('La transaccion esta pendiente');
+    expect(textContent(pendingRenderer)).toContain(
+      'La transaccion esta pendiente',
+    );
 
     const completedRenderer = renderWithI18n(
       <ConfirmationScreen
         layout={wideLayout}
-        lastOrder={createOrderSummary()}
+        lastOrder={{ ...createOrderSummary(), number: fullOrderId }}
         transactionStatus="completed"
         cartCount={2}
         onNavigate={jest.fn()}
@@ -303,7 +372,59 @@ describe('screen rendering', () => {
 
     const output = textContent(completedRenderer);
     expect(output).toContain('Pago confirmado');
-    expect(output).toContain('Abrir carrito (2)');
+    expect(output).toContain('ID de compra');
+    expect(output).toContain(fullOrderId);
+    expect(output).toContain('Total pagado');
+    expect(output).toContain('Seguir comprando');
+  });
+
+  it('renders loading, empty and populated purchase history states', () => {
+    const loadingRenderer = renderWithI18n(
+      <HistoryScreen
+        layout={compactLayout}
+        transactions={[]}
+        hydrated={false}
+        onNavigate={jest.fn()}
+      />,
+      compactLayout,
+    );
+
+    expect(textContent(loadingRenderer)).toContain('Cargando historial');
+
+    const emptyRenderer = renderWithI18n(
+      <HistoryScreen
+        layout={compactLayout}
+        transactions={[]}
+        hydrated
+        onNavigate={jest.fn()}
+      />,
+      compactLayout,
+    );
+
+    expect(textContent(emptyRenderer)).toContain('Aun no tienes compras');
+
+    const transactions = [
+      createTransactionSummary('completed', 1),
+      createTransactionSummary('pending', 2),
+      createTransactionSummary('failed', 3),
+    ];
+    const populatedRenderer = renderWithI18n(
+      <HistoryScreen
+        layout={wideLayout}
+        transactions={transactions}
+        hydrated
+        onNavigate={jest.fn()}
+      />,
+      wideLayout,
+    );
+    const output = textContent(populatedRenderer);
+
+    expect(output).toContain('Historial de compras');
+    expect(output).toContain(transactions[0].number);
+    expect(output).toContain('Aprobada');
+    expect(output).toContain('Pendiente');
+    expect(output).toContain('Fallida');
+    expect(output).toContain('COP');
   });
 
   it('renders the tab bar with an active badge when the cart has items', () => {
@@ -314,6 +435,7 @@ describe('screen rendering', () => {
 
     const output = textContent(renderer);
     expect(output).toContain('Carrito');
+    expect(output).toContain('Historial');
     expect(output).toContain('3');
   });
 });

@@ -12,6 +12,7 @@ import {
   selectLatestTransactionId,
   selectLatestTransactionStatus,
   selectSelectedProduct,
+  selectTransactionHistory,
 } from '../src/store/selectors';
 import { store, type RootState } from '../src/store/store';
 import { transactionActions } from '../src/store/transaction/transactionSlice';
@@ -30,7 +31,7 @@ describe('selectors', () => {
 
   it('maps screens to the active tab and flow index', () => {
     store.dispatch(checkoutActions.navigateTo('home'));
-    expect(selectActiveTab(store.getState())).toBe('home');
+    expect(selectActiveTab(store.getState())).toBe('catalog');
 
     store.dispatch(checkoutActions.navigateTo('productDetail'));
     expect(selectActiveTab(store.getState())).toBe('catalog');
@@ -38,12 +39,18 @@ describe('selectors', () => {
     store.dispatch(checkoutActions.navigateTo('confirmation'));
     expect(selectActiveTab(store.getState())).toBe('checkout');
 
-    expect(selectFlowIndexFromScreen('catalog')).toBe(1);
-    expect(selectFlowIndexFromScreen('confirmation')).toBe(5);
+    store.dispatch(checkoutActions.navigateTo('history'));
+    expect(selectActiveTab(store.getState())).toBe('history');
+
+    expect(selectFlowIndexFromScreen('catalog')).toBe(0);
+    expect(selectFlowIndexFromScreen('history')).toBe(0);
+    expect(selectFlowIndexFromScreen('confirmation')).toBe(4);
   });
 
   it('selects the product detail record and falls back to null when it is missing', () => {
-    store.dispatch(checkoutActions.openProductDetail({ productId: products[0].id }));
+    store.dispatch(
+      checkoutActions.openProductDetail({ productId: products[0].id }),
+    );
     expect(selectSelectedProduct(store.getState())?.id).toBe(products[0].id);
 
     const missingState = {
@@ -59,7 +66,9 @@ describe('selectors', () => {
 
   it('calculates cart totals and filters out empty quantities', () => {
     store.dispatch(cartActions.itemAdded({ productId: products[0].id }));
-    store.dispatch(cartActions.itemAdded({ productId: products[1].id, quantity: 2 }));
+    store.dispatch(
+      cartActions.itemAdded({ productId: products[1].id, quantity: 2 }),
+    );
 
     const state = store.getState();
     const augmentedState = {
@@ -77,7 +86,9 @@ describe('selectors', () => {
       products[0].price + products[1].price * 2,
     );
     expect(selectCartLineItems(augmentedState)).toHaveLength(2);
-    expect(selectCartLineItems(augmentedState).every((item) => item.quantity > 0)).toBe(true);
+    expect(
+      selectCartLineItems(augmentedState).every(item => item.quantity > 0),
+    ).toBe(true);
   });
 
   it('summarizes the latest transaction record', () => {
@@ -110,5 +121,8 @@ describe('selectors', () => {
       itemCount: 2,
       total: 278000,
     });
+    expect(selectTransactionHistory(state)).toEqual([
+      state.transaction.history[0]?.summary,
+    ]);
   });
 });

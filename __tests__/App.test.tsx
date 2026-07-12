@@ -18,7 +18,7 @@ function resetNavigation() {
   store.dispatch(checkoutActions.checkoutReset());
 }
 
-test('renders correctly on home', async () => {
+test('renders the catalog by default', async () => {
   await ReactTestRenderer.act(async () => {
     resetNavigation();
     ReactTestRenderer.create(<App />);
@@ -41,6 +41,15 @@ test('renders product detail screen when a product is selected', async () => {
     store.dispatch(
       checkoutActions.openProductDetail({ productId: products[0].id }),
     );
+    ReactTestRenderer.create(<App />);
+    await Promise.resolve();
+  });
+});
+
+test('renders purchase history when navigation changes', async () => {
+  await ReactTestRenderer.act(async () => {
+    resetNavigation();
+    store.dispatch(checkoutActions.navigateTo('history'));
     ReactTestRenderer.create(<App />);
     await Promise.resolve();
   });

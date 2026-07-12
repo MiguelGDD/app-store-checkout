@@ -1,13 +1,12 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, spacing, typography } from '../theme';
+import { colors, fonts, spacing, typography } from '../theme';
 import type { Product } from '../types';
 import { formatCurrency } from '../utils/format';
 import { useI18n } from '../i18n';
-import { useResponsiveLayout } from '../utils/responsive';
 import { AppCard } from './AppCard';
 import { AppButton } from './AppButton';
-import { Pill } from './Pill';
+import { ProductArtwork } from './ProductArtwork';
 
 type ProductCardProps = {
   product: Product;
@@ -20,65 +19,53 @@ type ProductCardProps = {
 export function ProductCard({
   product,
   quantity,
-  compact,
   onAdd,
   onOpenDetails,
 }: ProductCardProps) {
   const { t } = useI18n();
-  const layout = useResponsiveLayout();
-  const hasDetailAction = Boolean(onOpenDetails);
-  const priceLabelSize = layout.isCompact ? 11 : 10;
 
   return (
     <AppCard style={styles.card}>
+      <ProductArtwork product={product} />
       <View style={styles.header}>
-        <Pill label={product.badge} tone="primary" />
-        <Text style={styles.stock}>{t('productCard.stock', { count: product.stock })}</Text>
+        <Text style={styles.name} numberOfLines={1}>
+          {product.name}
+        </Text>
+        <Text style={styles.stock}>
+          {t('productCard.stock', { count: product.stock })}
+        </Text>
       </View>
-      <Text style={styles.name}>{product.name}</Text>
-      <Text style={styles.description}>{product.description}</Text>
-      <View
-        style={[
-          styles.actions,
-          compact || !hasDetailAction ? styles.actionsStack : styles.actionsRow,
-        ]}
-      >
-        <View style={styles.priceBlock}>
-          <Text style={[styles.priceLabel, { fontSize: priceLabelSize }]}>
-            {t('productCard.price')}
-          </Text>
-          <Text style={styles.price}>{formatCurrency(product.price)}</Text>
-        </View>
+      <Text style={styles.description} numberOfLines={2}>
+        {product.description}
+      </Text>
+      <Text style={styles.price}>{formatCurrency(product.price)}</Text>
+      <View style={styles.actions}>
         {onOpenDetails ? (
           <AppButton
             compact
-            fullWidth={compact}
             label={t('productCard.viewDetails')}
             onPress={onOpenDetails}
             variant="secondary"
-            style={!compact ? styles.actionButton : undefined}
+            style={styles.action}
           />
         ) : null}
         <AppButton
           compact
-          fullWidth={compact}
           label={
             quantity > 0
-              ? t('productCard.addOneMore', { count: quantity })
+              ? t('productCard.inCart', { count: quantity })
               : t('productCard.addToCart')
           }
           onPress={onAdd}
-          style={!compact && hasDetailAction ? styles.actionButton : undefined}
+          style={styles.action}
         />
       </View>
-      <View style={[styles.accentBar, { backgroundColor: product.accent }]} />
     </AppCard>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    overflow: 'hidden',
     gap: spacing.sm,
   },
   header: {
@@ -87,60 +74,36 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: spacing.sm,
   },
-  stock: {
-    color: colors.textSoft,
-    fontSize: typography.small,
+  name: {
+    flex: 1,
+    color: colors.text,
+    fontFamily: fonts.display,
+    fontSize: typography.subtitle,
     fontWeight: '700',
   },
-  name: {
-    color: colors.text,
-    fontSize: typography.subtitle,
-    fontWeight: '800',
-    lineHeight: 26,
+  stock: {
+    color: colors.textSoft,
+    fontSize: typography.micro,
+    fontWeight: '700',
   },
   description: {
     color: colors.textMuted,
-    fontSize: typography.body,
-    lineHeight: 21,
-  },
-  actions: {
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  actionsStack: {
-    flexDirection: 'column',
-    alignItems: 'stretch',
-  },
-  actionButton: {
-    flex: 1,
-    minWidth: 0,
-  },
-  priceBlock: {
-    flex: 1,
-    minWidth: 0,
-  },
-  priceLabel: {
-    color: colors.textSoft,
-    fontSize: typography.micro,
-    textTransform: 'uppercase',
-    letterSpacing: 0.9,
-    fontWeight: '800',
-    marginBottom: 2,
+    fontSize: typography.small,
+    lineHeight: 18,
+    minHeight: 36,
   },
   price: {
-    color: colors.text,
+    color: colors.primary,
     fontSize: typography.body,
     fontWeight: '800',
   },
-  accentBar: {
-    height: 3,
-    width: '100%',
-    marginTop: spacing.sm,
-    borderRadius: 999,
+  actions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  action: {
+    flex: 1,
+    minWidth: 0,
   },
 });

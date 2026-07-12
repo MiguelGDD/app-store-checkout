@@ -1,13 +1,12 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { colors, spacing, typography } from '../theme';
+import { spacing } from '../theme';
 import type {
   CatalogSource,
   CatalogStatus,
   Product,
   ResponsiveLayout,
 } from '../types';
-import { AppCard } from '../components/AppCard';
 import { BackendSyncCard } from '../components/BackendSyncCard';
 import { ProductCard } from '../components/ProductCard';
 import { EmptyState } from '../components/EmptyState';
@@ -42,6 +41,8 @@ export function CatalogScreen({
 }: CatalogScreenProps) {
   const { t } = useI18n();
   const productCardWidth = layout.gridColumns > 1 ? '48%' : '100%';
+  const showSyncState =
+    catalogStatus === 'loading' || catalogStatus === 'failed';
 
   return (
     <ScreenFrame layout={layout}>
@@ -52,18 +53,15 @@ export function CatalogScreen({
           description={t('catalog.description')}
         />
 
-        <BackendSyncCard
-          status={catalogStatus}
-          error={catalogError}
-          source={catalogSource}
-          lastSyncedAt={catalogLastSyncedAt}
-          onRetry={onRetryCatalogSync}
-        />
-
-        <AppCard style={styles.noteCard}>
-          <Text style={styles.noteTitle}>{t('catalog.noteTitle')}</Text>
-          <Text style={styles.noteDescription}>{t('catalog.noteDescription')}</Text>
-        </AppCard>
+        {showSyncState ? (
+          <BackendSyncCard
+            status={catalogStatus}
+            error={catalogError}
+            source={catalogSource}
+            lastSyncedAt={catalogLastSyncedAt}
+            onRetry={onRetryCatalogSync}
+          />
+        ) : null}
 
         {catalogItems.length === 0 ? (
           <EmptyState
@@ -74,24 +72,20 @@ export function CatalogScreen({
           />
         ) : (
           <View style={styles.grid}>
-            {catalogItems.map((product) => {
-              const quantity = cartQuantities[product.id] ?? 0;
-
-              return (
-                <View
-                  key={product.id}
-                  style={[styles.gridItem, { width: productCardWidth }]}
-                >
-                  <ProductCard
-                    product={product}
-                    quantity={quantity}
-                    compact={layout.isCompact}
-                    onAdd={() => onAddToCart(product.id)}
-                    onOpenDetails={() => onOpenProduct(product.id)}
-                  />
-                </View>
-              );
-            })}
+            {catalogItems.map(product => (
+              <View
+                key={product.id}
+                style={[styles.gridItem, { width: productCardWidth }]}
+              >
+                <ProductCard
+                  product={product}
+                  quantity={cartQuantities[product.id] ?? 0}
+                  compact={layout.isCompact}
+                  onAdd={() => onAddToCart(product.id)}
+                  onOpenDetails={() => onOpenProduct(product.id)}
+                />
+              </View>
+            ))}
           </View>
         )}
       </View>
@@ -102,19 +96,6 @@ export function CatalogScreen({
 const styles = StyleSheet.create({
   stack: {
     gap: spacing.lg,
-  },
-  noteCard: {
-    gap: spacing.sm,
-  },
-  noteTitle: {
-    color: colors.text,
-    fontSize: typography.body,
-    fontWeight: '800',
-  },
-  noteDescription: {
-    color: colors.textMuted,
-    fontSize: typography.body,
-    lineHeight: 21,
   },
   grid: {
     flexDirection: 'row',
