@@ -4,6 +4,7 @@ import { colors, spacing, typography } from '../theme';
 import type { Product } from '../types';
 import { formatCurrency } from '../utils/format';
 import { useI18n } from '../i18n';
+import { useResponsiveLayout } from '../utils/responsive';
 import { AppCard } from './AppCard';
 import { AppButton } from './AppButton';
 import { Pill } from './Pill';
@@ -24,7 +25,9 @@ export function ProductCard({
   onOpenDetails,
 }: ProductCardProps) {
   const { t } = useI18n();
+  const layout = useResponsiveLayout();
   const hasDetailAction = Boolean(onOpenDetails);
+  const priceLabelSize = layout.isCompact ? 11 : 10;
 
   return (
     <AppCard style={styles.card}>
@@ -41,7 +44,9 @@ export function ProductCard({
         ]}
       >
         <View style={styles.priceBlock}>
-          <Text style={styles.priceLabel}>Price</Text>
+          <Text style={[styles.priceLabel, { fontSize: priceLabelSize }]}>
+            {t('productCard.price')}
+          </Text>
           <Text style={styles.price}>{formatCurrency(product.price)}</Text>
         </View>
         {onOpenDetails ? (

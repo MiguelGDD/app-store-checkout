@@ -73,7 +73,14 @@ export function ProductDetailScreen({
             <Pill label={t('common.inStock', { count: product.stock })} tone="neutral" />
           </View>
 
-          <Text style={styles.price}>{formatCurrency(product.price)}</Text>
+          <Text
+            style={[
+              styles.price,
+              layout.isCompact ? styles.priceCompact : layout.isWide ? styles.priceWide : null,
+            ]}
+          >
+            {formatCurrency(product.price)}
+          </Text>
           <Text style={styles.description}>{product.description}</Text>
           <Text style={styles.meta}>
             {t('productDetail.inCart', { quantity: formatQuantity(quantityInCart) })}
@@ -138,6 +145,14 @@ const styles = StyleSheet.create({
     lineHeight: 36,
     fontWeight: '900',
     letterSpacing: -0.7,
+  },
+  priceCompact: {
+    fontSize: 26,
+    lineHeight: 31,
+  },
+  priceWide: {
+    fontSize: 34,
+    lineHeight: 40,
   },
   description: {
     color: colors.textMuted,

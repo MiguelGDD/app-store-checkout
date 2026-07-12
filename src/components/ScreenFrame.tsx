@@ -9,19 +9,24 @@ type ScreenFrameProps = {
 };
 
 export function ScreenFrame({ layout, children }: ScreenFrameProps) {
+  const contentPaddingTop = layout.isCompact ? 12 : layout.isWide ? 20 : 16;
+  const contentContainerStyle = {
+    paddingHorizontal: layout.pagePadding,
+    paddingBottom: layout.bottomPadding,
+    paddingTop: contentPaddingTop,
+  };
+  const innerStyle = {
+    maxWidth: layout.contentMaxWidth,
+    gap: layout.stackGap,
+  };
+
   return (
     <ScrollView
       style={styles.scroll}
-      contentContainerStyle={[
-        styles.content,
-        {
-          paddingHorizontal: layout.pagePadding,
-          paddingBottom: layout.bottomPadding,
-        },
-      ]}
+      contentContainerStyle={[styles.content, contentContainerStyle]}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.inner, { maxWidth: layout.contentMaxWidth }]}>
+      <View style={[styles.inner, innerStyle]}>
         {children}
       </View>
     </ScrollView>
@@ -35,10 +40,9 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     alignItems: 'center',
-    paddingTop: 18,
+    paddingTop: 16,
   },
   inner: {
     width: '100%',
-    gap: 18,
   },
 });

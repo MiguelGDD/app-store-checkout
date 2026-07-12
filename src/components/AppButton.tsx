@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 
 import { colors, radius, spacing, typography } from '../theme';
+import { useResponsiveLayout } from '../utils/responsive';
 
 type AppButtonProps = {
   label: string;
@@ -22,6 +23,22 @@ export function AppButton({
   disabled = false,
   style,
 }: AppButtonProps) {
+  const layout = useResponsiveLayout();
+  const baseMinHeight = compact
+    ? layout.isCompact
+      ? 38
+      : 40
+    : layout.isWide
+      ? 52
+      : 48;
+  const baseHorizontalPadding = compact
+    ? layout.isCompact
+      ? spacing.md
+      : spacing.lg
+    : layout.isWide
+      ? spacing.xl + 4
+      : spacing.xl;
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -36,12 +53,14 @@ export function AppButton({
         compact && styles.compact,
         pressed && !disabled && styles.pressed,
         disabled && styles.disabled,
+        { minHeight: baseMinHeight, paddingHorizontal: baseHorizontalPadding },
         style,
       ]}
     >
       <Text
         style={[
           styles.label,
+          layout.isWide && styles.labelWide,
           variant === 'primary' && styles.labelPrimary,
           variant === 'secondary' && styles.labelSecondary,
           variant === 'ghost' && styles.labelGhost,
@@ -55,19 +74,14 @@ export function AppButton({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 48,
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.xl,
     borderWidth: 1,
     borderColor: 'transparent',
     alignSelf: 'flex-start',
   },
-  compact: {
-    minHeight: 40,
-    paddingHorizontal: spacing.lg,
-  },
+  compact: {},
   fullWidth: {
     alignSelf: 'stretch',
   },
@@ -94,6 +108,9 @@ const styles = StyleSheet.create({
     fontSize: typography.body,
     fontWeight: '700',
     letterSpacing: 0.2,
+  },
+  labelWide: {
+    fontSize: 16,
   },
   labelPrimary: {
     color: colors.backgroundDeep,

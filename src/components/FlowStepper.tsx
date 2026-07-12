@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, spacing, typography } from '../theme';
 import type { FlowStep } from '../types';
+import { useResponsiveLayout } from '../utils/responsive';
 
 type FlowStepperProps = {
   steps: FlowStep[];
@@ -9,23 +10,32 @@ type FlowStepperProps = {
 };
 
 export function FlowStepper({ steps, activeIndex }: FlowStepperProps) {
+  const layout = useResponsiveLayout();
+  const markerSize = layout.isCompact ? 26 : 30;
+  const connectorMinHeight = layout.isCompact ? 14 : 18;
+  const stepGap = layout.isCompact ? spacing.sm : spacing.md;
+  const labelSize = layout.isCompact ? typography.micro : typography.small;
+  const descriptionSize = layout.isCompact ? 11 : typography.small;
+
   return (
     <View style={styles.container}>
       {steps.map((step, index) => {
         const isComplete = index <= activeIndex;
 
         return (
-          <View key={step.title} style={styles.stepRow}>
+          <View key={step.title} style={[styles.stepRow, { gap: stepGap }]}>
             <View style={styles.markerColumn}>
               <View
                 style={[
                   styles.marker,
+                  { width: markerSize, height: markerSize },
                   isComplete ? styles.markerActive : styles.markerInactive,
                 ]}
               >
                 <Text
                   style={[
                     styles.markerLabel,
+                    { fontSize: labelSize },
                     isComplete ? styles.markerLabelActive : styles.markerLabelInactive,
                   ]}
                 >
@@ -36,6 +46,7 @@ export function FlowStepper({ steps, activeIndex }: FlowStepperProps) {
                 <View
                   style={[
                     styles.connector,
+                    { minHeight: connectorMinHeight },
                     isComplete ? styles.connectorActive : styles.connectorInactive,
                   ]}
                 />
@@ -43,7 +54,9 @@ export function FlowStepper({ steps, activeIndex }: FlowStepperProps) {
             </View>
             <View style={styles.copy}>
               <Text style={styles.stepTitle}>{step.title}</Text>
-              <Text style={styles.stepDescription}>{step.description}</Text>
+              <Text style={[styles.stepDescription, { fontSize: descriptionSize }]}>
+                {step.description}
+              </Text>
             </View>
           </View>
         );

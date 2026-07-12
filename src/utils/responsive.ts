@@ -5,17 +5,17 @@ import type { ResponsiveLayout } from '../types';
 export function createResponsiveLayout(width: number): ResponsiveLayout {
   const isCompact = width < 390;
   const isWide = width >= 720;
-  let pagePadding = 24;
+  let pagePadding = 20;
 
   if (isCompact) {
     pagePadding = 16;
-  } else if (width < 600) {
-    pagePadding = 20;
+  } else if (isWide) {
+    pagePadding = 28;
   }
 
   const contentMaxWidth = isWide ? 920 : 640;
   const gridColumns = width >= 620 ? 2 : 1;
-  const bottomPadding = isWide ? 152 : 140;
+  const bottomPadding = isWide ? 160 : isCompact ? 128 : 144;
 
   return {
     width,
@@ -25,7 +25,7 @@ export function createResponsiveLayout(width: number): ResponsiveLayout {
     contentMaxWidth,
     gridColumns,
     bottomPadding,
-    stackGap: isCompact ? 12 : 16,
+    stackGap: isCompact ? 12 : isWide ? 20 : 16,
   };
 }
 

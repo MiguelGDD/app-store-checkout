@@ -94,7 +94,14 @@ export function ConfirmationScreen({
         <AppCard tone="hero" style={styles.heroCard}>
           <Pill label={t(resultCopy.labelKey)} tone={resultCopy.tone} />
           <Text style={styles.resultTitle}>{t(resultCopy.titleKey)}</Text>
-          <Text style={styles.heroTitle}>{orderNumber}</Text>
+          <Text
+            style={[
+              styles.heroTitle,
+              layout.isCompact ? styles.heroTitleCompact : layout.isWide ? styles.heroTitleWide : null,
+            ]}
+          >
+            {orderNumber}
+          </Text>
           <Text style={styles.heroDescription}>{t(resultCopy.descriptionKey)}</Text>
           <Text style={styles.orderDescription}>{orderDescription}</Text>
           <View style={styles.heroButtons}>
@@ -137,6 +144,14 @@ const styles = StyleSheet.create({
     lineHeight: 36,
     fontWeight: '900',
     letterSpacing: -0.7,
+  },
+  heroTitleCompact: {
+    fontSize: 26,
+    lineHeight: 31,
+  },
+  heroTitleWide: {
+    fontSize: 34,
+    lineHeight: 40,
   },
   heroDescription: {
     color: colors.textMuted,

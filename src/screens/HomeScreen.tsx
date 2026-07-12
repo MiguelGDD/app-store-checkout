@@ -90,7 +90,14 @@ export function HomeScreen({
             <Pill label={t('home.shellReady')} tone="primary" />
             <Text style={styles.heroCount}>{formatQuantity(cartCount)}</Text>
           </View>
-          <Text style={styles.heroTitle}>{t('home.heroTitle')}</Text>
+          <Text
+            style={[
+              styles.heroTitle,
+              layout.isCompact ? styles.heroTitleCompact : layout.isWide ? styles.heroTitleWide : null,
+            ]}
+          >
+            {t('home.heroTitle')}
+          </Text>
           <Text style={styles.heroDescription}>{t('home.heroDescription')}</Text>
           <View style={styles.heroButtons}>
             <AppButton label={t('common.openCatalog')} onPress={() => onNavigate('catalog')} />
@@ -132,7 +139,14 @@ export function HomeScreen({
 
         <AppCard style={styles.featureCard}>
           <Text style={styles.sectionLabel}>{t('common.featuredProduct')}</Text>
-          <Text style={styles.featureTitle}>{featuredProduct.name}</Text>
+          <Text
+            style={[
+              styles.featureTitle,
+              layout.isCompact ? styles.featureTitleCompact : layout.isWide ? styles.featureTitleWide : null,
+            ]}
+          >
+            {featuredProduct.name}
+          </Text>
           <Text style={styles.featureDescription}>{featuredProduct.description}</Text>
           <View style={styles.featureFooter}>
             <Text style={styles.featurePrice}>
@@ -160,7 +174,12 @@ export function HomeScreen({
         {lastOrder ? (
           <AppCard style={styles.orderCard}>
             <Text style={styles.sectionLabel}>{t('common.latestOrder')}</Text>
-            <Text style={styles.orderTitle}>
+            <Text
+              style={[
+                styles.orderTitle,
+                layout.isCompact ? styles.orderTitleCompact : null,
+              ]}
+            >
               {t('common.orderNumber', { number: lastOrder.number })}
             </Text>
             <Text style={styles.orderDescription}>
@@ -214,6 +233,14 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: -0.7,
   },
+  heroTitleCompact: {
+    fontSize: 26,
+    lineHeight: 31,
+  },
+  heroTitleWide: {
+    fontSize: 34,
+    lineHeight: 40,
+  },
   heroDescription: {
     color: colors.textMuted,
     fontSize: typography.body,
@@ -248,6 +275,14 @@ const styles = StyleSheet.create({
     fontSize: typography.title,
     lineHeight: 30,
     fontWeight: '800',
+  },
+  featureTitleCompact: {
+    fontSize: 22,
+    lineHeight: 28,
+  },
+  featureTitleWide: {
+    fontSize: 26,
+    lineHeight: 32,
   },
   featureDescription: {
     color: colors.textMuted,
@@ -285,6 +320,10 @@ const styles = StyleSheet.create({
     fontSize: typography.subtitle,
     fontWeight: '800',
     lineHeight: 26,
+  },
+  orderTitleCompact: {
+    fontSize: 16,
+    lineHeight: 22,
   },
   orderDescription: {
     color: colors.textMuted,
