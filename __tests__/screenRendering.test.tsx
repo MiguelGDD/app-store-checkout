@@ -217,6 +217,9 @@ describe('screen rendering', () => {
     const output = textContent(populatedRenderer);
     expect(output).toContain('Subtotal');
     expect(output).toContain('Ir al pago');
+    expect(output.indexOf('Subtotal')).toBeLessThan(
+      output.indexOf(products[0].name),
+    );
   });
 
   it('renders the checkout screen for empty and populated carts', () => {

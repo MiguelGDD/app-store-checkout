@@ -61,18 +61,6 @@ export function CartScreen({
           />
         ) : (
           <>
-            <View style={styles.lines}>
-              {items.map(item => (
-                <CartLineItem
-                  key={item.product.id}
-                  product={item.product}
-                  quantity={item.quantity}
-                  onIncrement={() => onIncrement(item.product.id)}
-                  onDecrement={() => onDecrement(item.product.id)}
-                />
-              ))}
-            </View>
-
             <AppCard style={styles.summaryCard}>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>{t('common.subtotal')}</Text>
@@ -95,6 +83,18 @@ export function CartScreen({
                 fullWidth
               />
             </AppCard>
+
+            <View style={styles.lines}>
+              {items.map(item => (
+                <CartLineItem
+                  key={item.product.id}
+                  product={item.product}
+                  quantity={item.quantity}
+                  onIncrement={() => onIncrement(item.product.id)}
+                  onDecrement={() => onDecrement(item.product.id)}
+                />
+              ))}
+            </View>
           </>
         )}
       </View>
