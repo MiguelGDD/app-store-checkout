@@ -261,11 +261,36 @@ describe('screen rendering', () => {
       wideLayout,
     );
 
-    const output = textContent(populatedRenderer);
+    let output = textContent(populatedRenderer);
+    expect(output).toContain('Pay with credit card');
+    expect(output).toContain('VISA');
+    expect(output).toContain('mastercard');
+    expect(populatedRenderer.root.findAllByType(TextInput)).toHaveLength(0);
+
+    const openPaymentButton = populatedRenderer.root.findByProps({
+      testID: 'credit-card-payment-button',
+    });
+    ReactTestRenderer.act(() => {
+      openPaymentButton.props.onPress();
+    });
+
+    output = textContent(populatedRenderer);
     expect(output).toContain('Tarjeta de credito');
     expect(output).toContain('Sandbox');
 
     const inputs = populatedRenderer.root.findAllByType(TextInput);
+    const paymentButton = populatedRenderer.root.findByProps({
+      testID: 'submit-card-payment',
+    });
+
+    ReactTestRenderer.act(() => {
+      paymentButton.props.onPress();
+    });
+    expect(onPlaceOrder).not.toHaveBeenCalled();
+    expect(textContent(populatedRenderer)).toContain(
+      'Ingresa un numero VISA o Mastercard valido',
+    );
+
     ReactTestRenderer.act(() => {
       inputs[0].props.onChangeText('Ana Perez');
       inputs[1].props.onChangeText('4242424242424242');
@@ -275,13 +300,7 @@ describe('screen rendering', () => {
 
     expect(inputs[1].props.value).toBe('4242 4242 4242 4242');
     expect(inputs[2].props.value).toBe('12/29');
-
-    const paymentButtons = populatedRenderer.root.findAll(
-      node =>
-        typeof node.props.onPress === 'function' &&
-        node.props.disabled === false,
-    );
-    const paymentButton = paymentButtons[0];
+    expect(textContent(populatedRenderer)).toContain('Tarjeta VISA detectada');
     expect(paymentButton.props.disabled).toBe(false);
 
     ReactTestRenderer.act(() => {
