@@ -1,0 +1,5 @@
+<resources>
+    <color name="splash_background">#F7F4EE</color>
+    <color name="splash_brand">#1F6F5B</color>
+    <color name="splash_icon">#FFFFFF</color>
+</resources>
