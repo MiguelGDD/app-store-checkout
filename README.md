@@ -44,8 +44,9 @@ npm install
 cp .env.example .env
 ```
 
-Configura en `.env` la variable `BACKEND_BASE_URL` con la URL del backend, sin
-una barra final.
+Configura en `.env` las variables `BACKEND_BASE_URL` y `BACKEND_API_KEY`.
+`BACKEND_BASE_URL` debe apuntar al backend desplegado en la VPS de DigitalOcean
+o al entorno que quieras usar.
 
 En Android, crea `android/local.properties` si Android Studio no lo genero:
 
@@ -90,13 +91,12 @@ npm run ios
 
 ## Configuracion del backend
 
-La URL se lee desde `BACKEND_BASE_URL` en el archivo local `.env`. Babel la
-inyecta en el bundle mediante `react-native-dotenv`; no es necesario configurar
-Android e iOS por separado. El archivo `.env` esta ignorado por Git y el
-repositorio incluye `.env.example` como plantilla.
+La URL del backend y la API key se leen desde el archivo local `.env`. Babel
+las inyecta en el bundle mediante `react-native-dotenv`; no es necesario
+configurar Android e iOS por separado. El archivo `.env` esta ignorado por Git
+y el repositorio incluye `.env.example` como plantilla.
 
-La API key de desarrollo y los demas valores no sensibles estan centralizados
-en:
+La configuracion centralizada del cliente del backend esta en:
 
 ```text
 src/infrastructure/backend/backendConfig.ts

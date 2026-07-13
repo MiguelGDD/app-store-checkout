@@ -64,7 +64,7 @@ describe('backend api client', () => {
       expect.objectContaining({
         method: 'GET',
         headers: expect.objectContaining({
-          'x-api-key': 'change-me',
+          'x-api-key': backendConfig.apiKey,
         }),
       }),
     );
@@ -110,7 +110,7 @@ describe('backend api client', () => {
         method: 'POST',
         body: JSON.stringify(request),
         headers: expect.objectContaining({
-          'x-api-key': 'change-me',
+          'x-api-key': backendConfig.apiKey,
         }),
       }),
     );
