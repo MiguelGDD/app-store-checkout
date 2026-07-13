@@ -11,6 +11,21 @@ export type BackendProductDto = {
   updateAt: string;
 };
 
+export type BackendCustomerDto = {
+  id: number;
+  name?: string;
+  email?: string;
+};
+
+export type BackendTransactionProductDto = {
+  id: number;
+  quantity: number;
+  unitAmount: number;
+  createAt: string;
+  updateAt: string;
+  product: BackendProductDto;
+};
+
 export type BackendTransactionStatus =
   | 'PENDING'
   | 'APPROVED'
@@ -38,6 +53,8 @@ export type BackendTransactionDto = {
   bankTransactionId: string | null;
   createAt: string;
   updateAt: string;
+  customer?: BackendCustomerDto;
+  transactionProducts?: BackendTransactionProductDto[];
 };
 
 export type BackendApiErrorPayload = {

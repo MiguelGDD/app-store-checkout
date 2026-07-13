@@ -13,6 +13,8 @@ import {
   selectLatestTransactionStatus,
   selectSelectedProduct,
   selectTransactionHistory,
+  selectTransactionHistorySyncError,
+  selectTransactionHistorySyncStatus,
 } from '../src/store/selectors';
 import { store, type RootState } from '../src/store/store';
 import { transactionActions } from '../src/store/transaction/transactionSlice';
@@ -95,6 +97,7 @@ describe('selectors', () => {
     expect(selectLatestTransactionStatus(store.getState())).toBeNull();
     expect(selectLatestTransactionId(store.getState())).toBeNull();
     expect(selectLatestOrderSummary(store.getState())).toBeNull();
+    expect(selectTransactionHistory(store.getState())).toEqual([]);
 
     store.dispatch(
       transactionActions.recordTransaction({
@@ -121,8 +124,38 @@ describe('selectors', () => {
       itemCount: 2,
       total: 278000,
     });
-    expect(selectTransactionHistory(state)).toEqual([
-      state.transaction.history[0]?.summary,
+    expect(selectTransactionHistory(state)).toEqual([]);
+
+    store.dispatch(
+      transactionActions.transactionHistorySyncSucceeded({
+        transactions: [
+          {
+            transactionId: 'remote-1',
+            number: 'SC-900',
+            itemCount: 3,
+            total: 890000,
+            status: 'completed',
+            createdAt: '2026-07-12T00:00:00.000Z',
+            updatedAt: '2026-07-12T00:05:00.000Z',
+          },
+        ],
+        syncedAt: '2026-07-12T00:10:00.000Z',
+      }),
+    );
+
+    const syncedState = store.getState();
+    expect(selectTransactionHistorySyncStatus(syncedState)).toBe('succeeded');
+    expect(selectTransactionHistorySyncError(syncedState)).toBeNull();
+    expect(selectTransactionHistory(syncedState)).toEqual([
+      {
+        transactionId: 'remote-1',
+        number: 'SC-900',
+        itemCount: 3,
+        total: 890000,
+        status: 'completed',
+        createdAt: '2026-07-12T00:00:00.000Z',
+        updatedAt: '2026-07-12T00:05:00.000Z',
+      },
     ]);
   });
 });

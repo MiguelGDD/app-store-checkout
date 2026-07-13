@@ -41,7 +41,8 @@ import {
   selectLatestTransactionStatus,
   selectSelectedProduct,
   selectTransactionHistory,
-  selectTransactionHydrated,
+  selectTransactionHistorySyncError,
+  selectTransactionHistorySyncStatus,
 } from './store/selectors';
 import { checkoutActions } from './store/checkout/checkoutSlice';
 import { cartActions } from './store/cart/cartSlice';
@@ -49,6 +50,7 @@ import { transactionActions } from './store/transaction/transactionSlice';
 import { loadEncryptedTransactionSnapshot } from './store/transactionStorage';
 import { syncCatalog } from './store/workflows/catalogWorkflow';
 import { submitCheckout } from './store/workflows/checkoutWorkflow';
+import { syncTransactionHistory } from './store/workflows/transactionHistoryWorkflow';
 
 type CartLineItem = {
   product: Product;
@@ -69,7 +71,10 @@ type ActiveScreenRendererProps = {
   latestOrder: OrderSummary | null;
   latestTransactionStatus: ReturnType<typeof selectLatestTransactionStatus>;
   transactionHistory: TransactionSummary[];
-  transactionHydrated: boolean;
+  transactionHistorySyncStatus: ReturnType<
+    typeof selectTransactionHistorySyncStatus
+  >;
+  transactionHistorySyncError: string | null;
   selectedProduct: Product | null;
   selectedProductQuantity: number;
   flowIndex: number;
@@ -80,6 +85,7 @@ type ActiveScreenRendererProps = {
   decrementItem: (productId: string) => void;
   openProductDetail: (productId: string) => void;
   retryCatalogSync: () => void;
+  retryTransactionHistorySync: () => void;
   placeOrder: (payment: CardPaymentDetails) => void;
 };
 
@@ -173,8 +179,10 @@ function renderActiveScreen(
       <HistoryScreen
         layout={props.layout}
         transactions={props.transactionHistory}
-        hydrated={props.transactionHydrated}
+        syncStatus={props.transactionHistorySyncStatus}
+        syncError={props.transactionHistorySyncError}
         onNavigate={props.navigate}
+        onRetrySync={props.retryTransactionHistorySync}
       />
     );
   }
@@ -207,7 +215,12 @@ export default function AppShell() {
   const latestOrder = useAppSelector(selectLatestOrderSummary);
   const latestTransactionStatus = useAppSelector(selectLatestTransactionStatus);
   const transactionHistory = useAppSelector(selectTransactionHistory);
-  const transactionHydrated = useAppSelector(selectTransactionHydrated);
+  const transactionHistorySyncStatus = useAppSelector(
+    selectTransactionHistorySyncStatus,
+  );
+  const transactionHistorySyncError = useAppSelector(
+    selectTransactionHistorySyncError,
+  );
   const selectedProduct = useAppSelector(selectSelectedProduct);
   const flowIndex = useAppSelector(selectCheckoutFlowIndex);
   const isSubmitting = useAppSelector(selectCheckoutIsSubmitting);
@@ -240,6 +253,12 @@ export default function AppShell() {
     dispatch(syncCatalog());
   }, [dispatch]);
 
+  useEffect(() => {
+    if (activeScreen === 'history') {
+      dispatch(syncTransactionHistory());
+    }
+  }, [activeScreen, dispatch]);
+
   const retryCatalogSync = () => {
     dispatch(syncCatalog());
   };
@@ -260,6 +279,10 @@ export default function AppShell() {
     dispatch(checkoutActions.openProductDetail({ productId }));
   };
 
+  const retryTransactionHistorySync = () => {
+    dispatch(syncTransactionHistory());
+  };
+
   const placeOrder = async (payment: CardPaymentDetails) => {
     await dispatch(submitCheckout(payment));
   };
@@ -277,7 +300,8 @@ export default function AppShell() {
     latestOrder,
     latestTransactionStatus,
     transactionHistory,
-    transactionHydrated,
+    transactionHistorySyncStatus,
+    transactionHistorySyncError,
     selectedProduct,
     selectedProductQuantity,
     flowIndex,
@@ -288,6 +312,7 @@ export default function AppShell() {
     decrementItem,
     openProductDetail,
     retryCatalogSync,
+    retryTransactionHistorySync,
     placeOrder,
   });
 

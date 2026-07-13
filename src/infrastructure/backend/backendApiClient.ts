@@ -98,6 +98,7 @@ async function requestJson<T>(
 
 export type BackendStoreApiPort = {
   getProducts(): Promise<BackendProductDto[]>;
+  getTransactions(): Promise<BackendTransactionDto[]>;
   createTransaction(
     input: BackendCreateTransactionInput,
   ): Promise<BackendTransactionDto>;
@@ -106,6 +107,7 @@ export type BackendStoreApiPort = {
 export function createBackendStoreApiClient(): BackendStoreApiPort {
   return {
     getProducts: () => requestJson<BackendProductDto[]>('/products'),
+    getTransactions: () => requestJson<BackendTransactionDto[]>('/transactions'),
     createTransaction: input =>
       requestJson<BackendTransactionDto>('/transactions', {
         method: 'POST',

@@ -8,10 +8,14 @@ import {
   selectLatestOrderSummary,
   selectLatestTransactionStatus,
   selectSelectedProduct,
+  selectTransactionHistory,
+  selectTransactionHistorySyncError,
+  selectTransactionHistorySyncStatus,
 } from '../src/store/selectors';
 import { store } from '../src/store/store';
 import { transactionActions } from '../src/store/transaction/transactionSlice';
 import { createCheckoutWorkflow } from '../src/store/workflows/checkoutWorkflow';
+import { createTransactionHistoryWorkflow } from '../src/store/workflows/transactionHistoryWorkflow';
 import { products } from '../src/data/demo';
 import type { CardPaymentDetails } from '../src/types';
 
@@ -207,6 +211,75 @@ describe('redux workflow', () => {
     expect(state.checkout.isSubmitting).toBe(false);
     expect(state.checkout.paymentError).toContain('No pudimos procesar');
     expect(selectLatestTransactionStatus(state)).toBeNull();
+  });
+
+  test('syncs transaction history from the backend for the configured customer', async () => {
+    const apiClient = {
+      getTransactions: jest.fn().mockResolvedValue([
+        {
+          id: 11,
+          reference: 'remote-111',
+          totalAmount: 1000,
+          baseFee: 1000,
+          deliveryFee: 0,
+          status: 'APPROVED',
+          bankTransactionId: 'bank-11',
+          customer: {
+            id: 1,
+            name: 'Ana Perez',
+          },
+          transactionProducts: [
+            {
+              id: 1,
+              quantity: 2,
+              unitAmount: 500,
+              createAt: '2026-07-12T00:00:00.000Z',
+              updateAt: '2026-07-12T00:00:00.000Z',
+              product: backendProducts[0],
+            },
+          ],
+          createAt: '2026-07-12T00:00:00.000Z',
+          updateAt: '2026-07-12T00:01:00.000Z',
+        },
+        {
+          id: 12,
+          reference: 'remote-222',
+          totalAmount: 2000,
+          baseFee: 2000,
+          deliveryFee: 0,
+          status: 'DECLINED',
+          bankTransactionId: 'bank-12',
+          customer: {
+            id: 2,
+            name: 'Otra persona',
+          },
+          transactionProducts: [],
+          createAt: '2026-07-12T01:00:00.000Z',
+          updateAt: '2026-07-12T01:01:00.000Z',
+        },
+      ]),
+    };
+    const syncTransactionHistory =
+      createTransactionHistoryWorkflow(apiClient);
+
+    await store.dispatch(syncTransactionHistory());
+
+    const state = store.getState();
+
+    expect(apiClient.getTransactions).toHaveBeenCalledTimes(1);
+    expect(selectTransactionHistorySyncStatus(state)).toBe('succeeded');
+    expect(selectTransactionHistorySyncError(state)).toBeNull();
+    expect(selectTransactionHistory(state)).toEqual([
+      {
+        transactionId: '11',
+        number: 'remote-111',
+        itemCount: 2,
+        total: 1000,
+        status: 'completed',
+        createdAt: '2026-07-12T00:00:00.000Z',
+        updatedAt: '2026-07-12T00:01:00.000Z',
+      },
+    ]);
   });
 
   test('opens product detail and clears the selection when leaving it', () => {

@@ -422,8 +422,10 @@ describe('screen rendering', () => {
       <HistoryScreen
         layout={compactLayout}
         transactions={[]}
-        hydrated={false}
+        syncStatus="idle"
+        syncError={null}
         onNavigate={jest.fn()}
+        onRetrySync={jest.fn()}
       />,
       compactLayout,
     );
@@ -434,8 +436,10 @@ describe('screen rendering', () => {
       <HistoryScreen
         layout={compactLayout}
         transactions={[]}
-        hydrated
+        syncStatus="succeeded"
+        syncError={null}
         onNavigate={jest.fn()}
+        onRetrySync={jest.fn()}
       />,
       compactLayout,
     );
@@ -451,8 +455,10 @@ describe('screen rendering', () => {
       <HistoryScreen
         layout={wideLayout}
         transactions={transactions}
-        hydrated
+        syncStatus="succeeded"
+        syncError={null}
         onNavigate={jest.fn()}
+        onRetrySync={jest.fn()}
       />,
       wideLayout,
     );

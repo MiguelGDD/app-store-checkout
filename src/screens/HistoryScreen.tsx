@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import { AppButton } from '../components/AppButton';
 import { AppCard } from '../components/AppCard';
 import { EmptyState } from '../components/EmptyState';
 import { Pill } from '../components/Pill';
@@ -13,6 +14,7 @@ import type {
   TransactionStatus,
   TransactionSummary,
 } from '../types';
+import type { TransactionHistorySyncStatus } from '../store/transaction/transactionSlice';
 import {
   formatCurrency,
   formatDateTime,
@@ -22,8 +24,10 @@ import {
 type HistoryScreenProps = {
   layout: ResponsiveLayout;
   transactions: TransactionSummary[];
-  hydrated: boolean;
+  syncStatus: TransactionHistorySyncStatus;
+  syncError: string | null;
   onNavigate: (screen: ScreenId) => void;
+  onRetrySync: () => void;
 };
 
 function statusTone(status: TransactionStatus) {
@@ -41,10 +45,14 @@ function statusTone(status: TransactionStatus) {
 export function HistoryScreen({
   layout,
   transactions,
-  hydrated,
+  syncStatus,
+  syncError,
   onNavigate,
+  onRetrySync,
 }: HistoryScreenProps) {
   const { t } = useI18n();
+  const isLoading = transactions.length === 0 && syncStatus !== 'succeeded';
+  const hasError = syncStatus === 'failed';
 
   const statusLabel = (status: TransactionStatus) => {
     if (status === 'completed') {
@@ -67,18 +75,37 @@ export function HistoryScreen({
           description={t('history.description')}
         />
 
-        {!hydrated ? (
+        {isLoading ? (
           <AppCard>
             <Text style={styles.loading}>{t('history.loading')}</Text>
           </AppCard>
-        ) : transactions.length === 0 ? (
+        ) : null}
+
+        {hasError ? (
+          <AppCard style={styles.errorCard}>
+            <Text style={styles.errorTitle}>
+              {t('history.syncErrorTitle')}
+            </Text>
+            <Text style={styles.errorDescription}>
+              {syncError ?? t('history.syncErrorDescription')}
+            </Text>
+            <AppButton
+              label={t('common.retrySync')}
+              onPress={onRetrySync}
+              variant="secondary"
+              compact
+            />
+          </AppCard>
+        ) : null}
+
+        {!isLoading && !hasError && transactions.length === 0 ? (
           <EmptyState
             title={t('history.emptyTitle')}
             description={t('history.emptyDescription')}
             actionLabel={t('history.emptyAction')}
             onAction={() => onNavigate('catalog')}
           />
-        ) : (
+        ) : transactions.length > 0 ? (
           <View style={styles.list}>
             {transactions.map(transaction => (
               <AppCard
@@ -114,7 +141,7 @@ export function HistoryScreen({
               </AppCard>
             ))}
           </View>
-        )}
+        ) : null}
       </View>
     </ScreenFrame>
   );
@@ -128,6 +155,19 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: typography.body,
     textAlign: 'center',
+  },
+  errorCard: {
+    gap: spacing.md,
+  },
+  errorTitle: {
+    color: colors.text,
+    fontSize: typography.subtitle,
+    fontWeight: '800',
+  },
+  errorDescription: {
+    color: colors.textMuted,
+    fontSize: typography.body,
+    lineHeight: 21,
   },
   list: {
     gap: spacing.md,

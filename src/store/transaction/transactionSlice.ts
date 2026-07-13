@@ -9,8 +9,18 @@ import type {
 } from '../../types';
 import { encryptJson } from '../secureCodec';
 
+export type TransactionHistorySyncStatus =
+  | 'idle'
+  | 'loading'
+  | 'succeeded'
+  | 'failed';
+
 export type TransactionState = TransactionStateSnapshot & {
   hydrated: boolean;
+  remoteHistory: TransactionSummary[];
+  remoteHistoryStatus: TransactionHistorySyncStatus;
+  remoteHistoryError: string | null;
+  remoteHistoryLastSyncedAt: string | null;
 };
 
 export type CreateTransactionInput = {
@@ -34,6 +44,10 @@ const initialState: TransactionState = {
   latest: null,
   history: [],
   hydrated: false,
+  remoteHistory: [],
+  remoteHistoryStatus: 'idle',
+  remoteHistoryError: null,
+  remoteHistoryLastSyncedAt: null,
 };
 
 function createSummary(input: CreateTransactionInput): TransactionSummary {
@@ -106,6 +120,30 @@ const transactionSlice = createSlice({
       state.history = [updatedLatest, ...state.history.slice(1)];
       state.hydrated = true;
     },
+    transactionHistorySyncStarted(state) {
+      state.remoteHistoryStatus = 'loading';
+      state.remoteHistoryError = null;
+    },
+    transactionHistorySyncSucceeded(
+      state,
+      action: PayloadAction<{
+        transactions: TransactionSummary[];
+        syncedAt?: string;
+      }>,
+    ) {
+      state.remoteHistory = action.payload.transactions;
+      state.remoteHistoryStatus = 'succeeded';
+      state.remoteHistoryError = null;
+      state.remoteHistoryLastSyncedAt =
+        action.payload.syncedAt ?? new Date().toISOString();
+    },
+    transactionHistorySyncFailed(
+      state,
+      action: PayloadAction<{ error: string }>,
+    ) {
+      state.remoteHistoryStatus = 'failed';
+      state.remoteHistoryError = action.payload.error;
+    },
     hydrateTransactions(
       state,
       action: PayloadAction<TransactionStateSnapshot | null>,
@@ -125,6 +163,10 @@ const transactionSlice = createSlice({
       state.latest = null;
       state.history = [];
       state.hydrated = true;
+      state.remoteHistory = [];
+      state.remoteHistoryStatus = 'idle';
+      state.remoteHistoryError = null;
+      state.remoteHistoryLastSyncedAt = null;
     },
   },
 });
