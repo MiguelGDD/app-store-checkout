@@ -70,6 +70,62 @@ describe('backend api client', () => {
     );
   });
 
+  it('loads backend transactions from the API', async () => {
+    const transactions = [
+      {
+        id: 7,
+        reference: 'checkout-reference',
+        totalAmount: 2500000,
+        baseFee: 2500000,
+        deliveryFee: 0,
+        status: 'APPROVED',
+        bankTransactionId: 'bank-7',
+        customer: {
+          id: 1,
+          name: 'Ana Perez',
+        },
+        transactionProducts: [
+          {
+            id: 11,
+            quantity: 2,
+            unitAmount: 1250000,
+            createAt: '2026-07-12T00:00:00.000Z',
+            updateAt: '2026-07-12T00:00:00.000Z',
+            product: {
+              id: 1,
+              name: 'Laptop',
+              description: 'Lightweight laptop',
+              price: 1250000,
+              stock: 7,
+              image: 'https://example.com/laptop.png',
+              createAt: '2026-07-12T00:00:00.000Z',
+              updateAt: '2026-07-12T00:00:00.000Z',
+            },
+          },
+        ],
+        createAt: '2026-07-12T00:00:00.000Z',
+        updateAt: '2026-07-12T00:01:00.000Z',
+      },
+    ];
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValue(createResponse(200, JSON.stringify(transactions)));
+    globalWithFetch.fetch = fetchMock as unknown as typeof fetch;
+
+    const client = createBackendStoreApiClient();
+
+    await expect(client.getTransactions()).resolves.toEqual(transactions);
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${backendConfig.baseUrl}/transactions`,
+      expect.objectContaining({
+        method: 'GET',
+        headers: expect.objectContaining({
+          'x-api-key': backendConfig.apiKey,
+        }),
+      }),
+    );
+  });
+
   it('creates a backend payment transaction', async () => {
     const transaction = {
       id: 7,

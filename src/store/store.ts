@@ -13,7 +13,11 @@ transactionPersistenceMiddleware.startListening({
     const current = currentState as RootState;
     const previous = previousState as RootState;
 
-    return current.transaction !== previous.transaction;
+    return (
+      current.transaction.latest !== previous.transaction.latest ||
+      current.transaction.history !== previous.transaction.history ||
+      current.transaction.hydrated !== previous.transaction.hydrated
+    );
   },
   effect: async (_action, listenerApi) => {
     const state = listenerApi.getState() as RootState;

@@ -12,7 +12,7 @@ function resolveCatalogSyncError(): string {
 }
 
 export function createCatalogSyncWorkflow(
-  apiClient: BackendStoreApiPort = backendStoreApiClient,
+  apiClient: Pick<BackendStoreApiPort, 'getProducts'> = backendStoreApiClient,
 ) {
   return (): AppThunk => async (dispatch) => {
     dispatch(catalogActions.catalogSyncStarted());

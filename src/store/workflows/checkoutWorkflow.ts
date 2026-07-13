@@ -3,12 +3,10 @@ import {
   type BackendStoreApiPort,
 } from '../../infrastructure/backend/backendApiClient';
 import { backendConfig } from '../../infrastructure/backend/backendConfig';
-import type {
-  BackendCreateTransactionInput,
-  BackendTransactionStatus,
-} from '../../infrastructure/backend/backendTypes';
+import type { BackendCreateTransactionInput } from '../../infrastructure/backend/backendTypes';
+import { mapBackendTransactionStatus } from '../../infrastructure/backend/backendTransactionMapper';
 import { translate } from '../../i18n';
-import type { CardPaymentDetails, TransactionStatus } from '../../types';
+import type { CardPaymentDetails } from '../../types';
 import type { AppDispatch, AppThunk } from '../store';
 import { selectCartCount, selectCartLineItems } from '../selectors';
 import { cartActions } from '../cart/cartSlice';
@@ -17,20 +15,6 @@ import { checkoutActions } from '../checkout/checkoutSlice';
 import { transactionActions } from '../transaction/transactionSlice';
 
 type CheckoutApiPort = Pick<BackendStoreApiPort, 'createTransaction'>;
-
-function mapTransactionStatus(
-  status: BackendTransactionStatus,
-): TransactionStatus {
-  if (status === 'APPROVED') {
-    return 'completed';
-  }
-
-  if (status === 'PENDING') {
-    return 'pending';
-  }
-
-  return 'failed';
-}
 
 function buildRequest(
   payment: CardPaymentDetails,
@@ -111,7 +95,7 @@ export function createCheckoutWorkflow(
 
       try {
         const response = await apiClient.createTransaction(request);
-        const status = mapTransactionStatus(response.status);
+        const status = mapBackendTransactionStatus(response.status);
 
         if (status !== 'completed') {
           updatePurchasedStock(dispatch, lineItems, 1);

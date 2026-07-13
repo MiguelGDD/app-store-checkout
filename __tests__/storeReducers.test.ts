@@ -200,11 +200,52 @@ describe('transaction reducer', () => {
     expect(state.latest?.summary.updatedAt).toBe('2026-07-12T00:30:00.000Z');
     expect(state.history[0].summary.status).toBe('completed');
 
+    state = transactionReducer(
+      state,
+      transactionActions.transactionHistorySyncStarted(),
+    );
+    expect(state.remoteHistoryStatus).toBe('loading');
+    expect(state.remoteHistoryError).toBeNull();
+
+    state = transactionReducer(
+      state,
+      transactionActions.transactionHistorySyncSucceeded({
+        transactions: [
+          {
+            transactionId: 'remote-1',
+            number: 'SC-900',
+            itemCount: 3,
+            total: 3000,
+            status: 'completed',
+            createdAt: '2026-07-12T01:00:00.000Z',
+            updatedAt: '2026-07-12T01:05:00.000Z',
+          },
+        ],
+        syncedAt: '2026-07-12T01:10:00.000Z',
+      }),
+    );
+    expect(state.remoteHistoryStatus).toBe('succeeded');
+    expect(state.remoteHistory).toHaveLength(1);
+    expect(state.remoteHistoryLastSyncedAt).toBe('2026-07-12T01:10:00.000Z');
+
+    state = transactionReducer(
+      state,
+      transactionActions.transactionHistorySyncFailed({
+        error: 'No se pudo sincronizar',
+      }),
+    );
+    expect(state.remoteHistoryStatus).toBe('failed');
+    expect(state.remoteHistoryError).toBe('No se pudo sincronizar');
+
     state = transactionReducer(state, transactionActions.clearTransactions());
     expect(state).toEqual({
       latest: null,
       history: [],
       hydrated: true,
+      remoteHistory: [],
+      remoteHistoryStatus: 'idle',
+      remoteHistoryError: null,
+      remoteHistoryLastSyncedAt: null,
     });
 
     state = transactionReducer(
@@ -215,6 +256,10 @@ describe('transaction reducer', () => {
       latest: null,
       history: [],
       hydrated: true,
+      remoteHistory: [],
+      remoteHistoryStatus: 'idle',
+      remoteHistoryError: null,
+      remoteHistoryLastSyncedAt: null,
     });
   });
 });

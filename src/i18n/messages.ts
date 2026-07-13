@@ -207,6 +207,9 @@ const es = {
   'history.description':
     'Consulta las ultimas compras realizadas en este dispositivo.',
   'history.loading': 'Cargando historial...',
+  'history.syncErrorTitle': 'No se pudo cargar el historial',
+  'history.syncErrorDescription':
+    'Revisa tu conexion e intenta sincronizar de nuevo.',
   'history.emptyTitle': 'Aun no tienes compras',
   'history.emptyDescription':
     'Cuando completes un pago, la compra aparecera aqui.',

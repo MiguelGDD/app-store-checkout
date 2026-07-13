@@ -12,6 +12,10 @@ jest.mock('../src/store/workflows/catalogWorkflow', () => ({
   syncCatalog: jest.fn(() => () => undefined),
 }));
 
+jest.mock('../src/store/workflows/transactionHistoryWorkflow', () => ({
+  syncTransactionHistory: jest.fn(() => () => undefined),
+}));
+
 import App from '../App';
 
 function resetNavigation() {

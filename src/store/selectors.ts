@@ -9,6 +9,7 @@ import type {
 } from '../types';
 import type { RootState } from './store';
 import { screenToFlowIndex } from './checkout/checkoutSlice';
+import type { TransactionHistorySyncStatus } from './transaction/transactionSlice';
 
 export const selectCatalogItems = (state: RootState) => state.catalog.items;
 export const selectCatalogStatus = (state: RootState) => state.catalog.status;
@@ -47,10 +48,15 @@ export const selectLatestTransactionStatus = (
 ): TransactionStatus | null => state.transaction.latest?.summary.status ?? null;
 export const selectTransactionHydrated = (state: RootState) =>
   state.transaction.hydrated;
-export const selectTransactionHistory = createSelector(
-  [(state: RootState) => state.transaction.history],
-  history => history.map(record => record.summary),
-);
+export const selectTransactionHistory = (state: RootState) =>
+  state.transaction.remoteHistory;
+export const selectTransactionHistorySyncStatus = (
+  state: RootState,
+): TransactionHistorySyncStatus => state.transaction.remoteHistoryStatus;
+export const selectTransactionHistorySyncError = (state: RootState) =>
+  state.transaction.remoteHistoryError;
+export const selectTransactionHistoryLastSyncedAt = (state: RootState) =>
+  state.transaction.remoteHistoryLastSyncedAt;
 
 export const selectSelectedProduct = createSelector(
   [selectCatalogItems, selectSelectedProductId],
