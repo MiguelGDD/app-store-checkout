@@ -40,6 +40,27 @@ describe('catalog slice', () => {
     expect(state.lastSyncedAt).toBe('2026-07-12T00:00:00.000Z');
   });
 
+  it('uses backend defaults when sync success omits metadata', () => {
+    const fixedIso = '2026-07-12T03:00:00.000Z';
+
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date(fixedIso));
+
+      const state = catalogReducer(
+        undefined,
+        catalogActions.catalogSyncSucceeded({
+          items: demoProducts,
+        }),
+      );
+
+      expect(state.source).toBe('backend');
+      expect(state.lastSyncedAt).toBe(fixedIso);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('stores the sync error without removing the current catalog', () => {
     const state = catalogReducer(
       undefined,
@@ -92,6 +113,18 @@ describe('catalog slice', () => {
       catalogActions.setProductStock({
         productId: 'missing',
         stock: 100,
+      }),
+    );
+
+    expect(state.items).toHaveLength(demoProducts.length);
+  });
+
+  it('ignores stock adjustments for unknown products', () => {
+    const state = catalogReducer(
+      undefined,
+      catalogActions.adjustProductStock({
+        productId: 'missing',
+        delta: 5,
       }),
     );
 

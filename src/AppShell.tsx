@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Platform, StatusBar, StyleSheet, View } from 'react-native';
+import { StatusBar, StyleSheet, View } from 'react-native';
 
 import { TabBar } from './components/TabBar';
 import { colors } from './theme';
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingTop: Platform.OS === 'ios' ? 24 : StatusBar.currentHeight ?? 0,
+    paddingTop: 24,
   },
   backdrop: {
     ...StyleSheet.absoluteFill,

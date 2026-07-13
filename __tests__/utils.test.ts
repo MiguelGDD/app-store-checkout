@@ -22,6 +22,7 @@ describe('credit card validation', () => {
   });
 
   test('requires a supported card with a valid Luhn checksum', () => {
+    expect(passesLuhnCheck('')).toBe(false);
     expect(passesLuhnCheck('4242424242424242')).toBe(true);
     expect(isValidCardNumber('4242424242424242')).toBe(true);
     expect(isValidCardNumber('5555555555554444')).toBe(true);
@@ -34,10 +35,29 @@ describe('credit card validation', () => {
 
     expect(isValidCardHolder('Ana Perez')).toBe(true);
     expect(isValidCardHolder('Ana')).toBe(false);
+    expect(isValidExpiry('07-26', now)).toBe(false);
     expect(isValidExpiry('07/26', now)).toBe(true);
+    expect(isValidExpiry('07/2x', now)).toBe(false);
     expect(isValidExpiry('06/26', now)).toBe(false);
     expect(isValidExpiry('13/29', now)).toBe(false);
+    expect(
+      isValidExpiry(
+        {
+          split: () => [undefined, undefined],
+        } as never,
+        now,
+      ),
+    ).toBe(false);
+    expect(
+      isValidExpiry(
+        {
+          split: () => ['07', undefined],
+        } as never,
+        now,
+      ),
+    ).toBe(false);
     expect(isValidCvc('123', 'visa')).toBe(true);
+    expect(isValidCvc('12', 'visa')).toBe(false);
     expect(isValidCvc('1234', 'mastercard')).toBe(false);
     expect(isValidCvc('123', 'unknown')).toBe(false);
   });

@@ -157,6 +157,31 @@ describe('redux workflow', () => {
     expect(getCatalogStock(backendProducts[1].id)).toBe(initialStockTwo - 1);
   });
 
+  test('stores a fallback payment token when the backend omits the bank transaction id', async () => {
+    const apiClient = {
+      createTransaction: jest.fn().mockResolvedValue({
+        ...createBackendTransaction('APPROVED'),
+        bankTransactionId: undefined,
+      }),
+    };
+    const submitCheckout = createCheckoutWorkflow(apiClient);
+    store.dispatch(cartActions.itemAdded({ productId: backendProducts[0].id }));
+    store.dispatch(checkoutActions.navigateTo('checkout'));
+
+    await store.dispatch(submitCheckout(payment));
+
+    const encrypted = store.getState().transaction.latest?.encryptedSensitiveData;
+
+    expect(encrypted).toBeTruthy();
+    expect(
+      decryptJson<{
+        paymentToken: string;
+      }>(encrypted!),
+    ).toMatchObject({
+      paymentToken: 'not-provided',
+    });
+  });
+
   test('rolls back the optimistic stock change for pending backend checkouts', async () => {
     const initialStock = backendProducts[0].stock;
     const apiClient = {
@@ -211,6 +236,49 @@ describe('redux workflow', () => {
     expect(state.checkout.isSubmitting).toBe(false);
     expect(state.checkout.paymentError).toContain('No pudimos procesar');
     expect(selectLatestTransactionStatus(state)).toBeNull();
+  });
+
+  test('rejects malformed checkout items before calling the backend', async () => {
+    const apiClient = { createTransaction: jest.fn() };
+    const submitCheckout = createCheckoutWorkflow(apiClient);
+
+    store.dispatch(
+      catalogActions.replaceCatalog([
+        {
+          ...backendProducts[0],
+          id: 'abc',
+        },
+      ]),
+    );
+    store.dispatch(cartActions.itemAdded({ productId: 'abc' }));
+    store.dispatch(checkoutActions.navigateTo('checkout'));
+
+    await store.dispatch(submitCheckout(payment));
+
+    const state = store.getState();
+
+    expect(apiClient.createTransaction).not.toHaveBeenCalled();
+    expect(state.checkout.activeScreen).toBe('checkout');
+    expect(state.checkout.isSubmitting).toBe(false);
+    expect(state.checkout.paymentError).toContain(
+      'El carrito contiene productos',
+    );
+  });
+
+  test('keeps checkout locked while a payment is already submitting', async () => {
+    const apiClient = { createTransaction: jest.fn() };
+    const submitCheckout = createCheckoutWorkflow(apiClient);
+
+    store.dispatch(cartActions.itemAdded({ productId: backendProducts[0].id }));
+    store.dispatch(checkoutActions.checkoutPaymentStarted());
+
+    await store.dispatch(submitCheckout(payment));
+
+    const state = store.getState();
+
+    expect(apiClient.createTransaction).not.toHaveBeenCalled();
+    expect(state.checkout.isSubmitting).toBe(true);
+    expect(state.cart.items[backendProducts[0].id]).toBe(1);
   });
 
   test('syncs transaction history from the backend for the configured customer', async () => {
@@ -280,6 +348,21 @@ describe('redux workflow', () => {
         updatedAt: '2026-07-12T00:01:00.000Z',
       },
     ]);
+  });
+
+  test('stores a readable error when transaction history sync fails', async () => {
+    const syncTransactionHistory = createTransactionHistoryWorkflow({
+      getTransactions: jest.fn().mockRejectedValue(new Error('offline')),
+    });
+
+    await store.dispatch(syncTransactionHistory());
+
+    const state = store.getState();
+
+    expect(selectTransactionHistorySyncStatus(state)).toBe('failed');
+    expect(selectTransactionHistorySyncError(state)).toContain(
+      'Revisa tu conexion',
+    );
   });
 
   test('opens product detail and clears the selection when leaving it', () => {

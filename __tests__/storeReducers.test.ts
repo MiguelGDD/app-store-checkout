@@ -50,6 +50,15 @@ describe('cart reducer', () => {
     state = cartReducer(state, cartActions.cartReset());
     expect(state.items).toEqual({});
   });
+
+  it('ignores decrements for items that are not in the cart', () => {
+    const state = cartReducer(
+      undefined,
+      cartActions.itemDecremented({ productId: 'missing' }),
+    );
+
+    expect(state.items).toEqual({});
+  });
 });
 
 describe('checkout reducer', () => {
@@ -165,101 +174,115 @@ describe('transaction reducer', () => {
     expect(state.latest).toBeNull();
     expect(state.hydrated).toBe(false);
 
-    state = transactionReducer(
-      state,
-      transactionActions.hydrateTransactions({
-        latest: {
-          summary: {
-            transactionId: 'txn-1',
-            number: 'SC-001',
-            itemCount: 1,
-            total: 1000,
-            status: 'pending',
-            createdAt: '2026-07-12T00:00:00.000Z',
-            updatedAt: '2026-07-12T00:00:00.000Z',
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-07-12T02:00:00.000Z'));
+
+      state = transactionReducer(
+        state,
+        transactionActions.hydrateTransactions({
+          latest: {
+            summary: {
+              transactionId: 'txn-1',
+              number: 'SC-001',
+              itemCount: 1,
+              total: 1000,
+              status: 'pending',
+              createdAt: '2026-07-12T00:00:00.000Z',
+              updatedAt: '2026-07-12T00:00:00.000Z',
+            },
+            encryptedSensitiveData: 'cipher',
           },
-          encryptedSensitiveData: 'cipher',
-        },
+          history: [],
+        }),
+      );
+
+      expect(state.hydrated).toBe(true);
+      expect(state.latest?.summary.status).toBe('pending');
+
+      state = transactionReducer(
+        state,
+        transactionActions.updateTransactionStatus({
+          transactionId: 'txn-1',
+          status: 'completed',
+        }),
+      );
+
+      expect(state.latest?.summary.status).toBe('completed');
+      expect(state.latest?.summary.updatedAt).toBe('2026-07-12T02:00:00.000Z');
+      expect(state.history[0].summary.status).toBe('completed');
+
+      state = transactionReducer(
+        state,
+        transactionActions.transactionHistorySyncStarted(),
+      );
+      expect(state.remoteHistoryStatus).toBe('loading');
+      expect(state.remoteHistoryError).toBeNull();
+
+      state = transactionReducer(
+        state,
+        transactionActions.transactionHistorySyncSucceeded({
+          transactions: [
+            {
+              transactionId: 'remote-1',
+              number: 'SC-900',
+              itemCount: 3,
+              total: 3000,
+              status: 'completed',
+              createdAt: '2026-07-12T01:00:00.000Z',
+              updatedAt: '2026-07-12T01:05:00.000Z',
+            },
+          ],
+          syncedAt: '2026-07-12T01:10:00.000Z',
+        }),
+      );
+      expect(state.remoteHistoryStatus).toBe('succeeded');
+      expect(state.remoteHistory).toHaveLength(1);
+      expect(state.remoteHistoryLastSyncedAt).toBe('2026-07-12T01:10:00.000Z');
+
+      state = transactionReducer(
+        state,
+        transactionActions.transactionHistorySyncSucceeded({
+          transactions: [],
+        }),
+      );
+      expect(state.remoteHistoryLastSyncedAt).toBe('2026-07-12T02:00:00.000Z');
+
+      state = transactionReducer(
+        state,
+        transactionActions.transactionHistorySyncFailed({
+          error: 'No se pudo sincronizar',
+        }),
+      );
+      expect(state.remoteHistoryStatus).toBe('failed');
+      expect(state.remoteHistoryError).toBe('No se pudo sincronizar');
+
+      state = transactionReducer(state, transactionActions.clearTransactions());
+      expect(state).toEqual({
+        latest: null,
         history: [],
-      }),
-    );
+        hydrated: true,
+        remoteHistory: [],
+        remoteHistoryStatus: 'idle',
+        remoteHistoryError: null,
+        remoteHistoryLastSyncedAt: null,
+      });
 
-    expect(state.hydrated).toBe(true);
-    expect(state.latest?.summary.status).toBe('pending');
-
-    state = transactionReducer(
-      state,
-      transactionActions.updateTransactionStatus({
-        transactionId: 'txn-1',
-        status: 'completed',
-        updatedAt: '2026-07-12T00:30:00.000Z',
-      }),
-    );
-
-    expect(state.latest?.summary.status).toBe('completed');
-    expect(state.latest?.summary.updatedAt).toBe('2026-07-12T00:30:00.000Z');
-    expect(state.history[0].summary.status).toBe('completed');
-
-    state = transactionReducer(
-      state,
-      transactionActions.transactionHistorySyncStarted(),
-    );
-    expect(state.remoteHistoryStatus).toBe('loading');
-    expect(state.remoteHistoryError).toBeNull();
-
-    state = transactionReducer(
-      state,
-      transactionActions.transactionHistorySyncSucceeded({
-        transactions: [
-          {
-            transactionId: 'remote-1',
-            number: 'SC-900',
-            itemCount: 3,
-            total: 3000,
-            status: 'completed',
-            createdAt: '2026-07-12T01:00:00.000Z',
-            updatedAt: '2026-07-12T01:05:00.000Z',
-          },
-        ],
-        syncedAt: '2026-07-12T01:10:00.000Z',
-      }),
-    );
-    expect(state.remoteHistoryStatus).toBe('succeeded');
-    expect(state.remoteHistory).toHaveLength(1);
-    expect(state.remoteHistoryLastSyncedAt).toBe('2026-07-12T01:10:00.000Z');
-
-    state = transactionReducer(
-      state,
-      transactionActions.transactionHistorySyncFailed({
-        error: 'No se pudo sincronizar',
-      }),
-    );
-    expect(state.remoteHistoryStatus).toBe('failed');
-    expect(state.remoteHistoryError).toBe('No se pudo sincronizar');
-
-    state = transactionReducer(state, transactionActions.clearTransactions());
-    expect(state).toEqual({
-      latest: null,
-      history: [],
-      hydrated: true,
-      remoteHistory: [],
-      remoteHistoryStatus: 'idle',
-      remoteHistoryError: null,
-      remoteHistoryLastSyncedAt: null,
-    });
-
-    state = transactionReducer(
-      state,
-      transactionActions.hydrateTransactions(null),
-    );
-    expect(state).toEqual({
-      latest: null,
-      history: [],
-      hydrated: true,
-      remoteHistory: [],
-      remoteHistoryStatus: 'idle',
-      remoteHistoryError: null,
-      remoteHistoryLastSyncedAt: null,
-    });
+      state = transactionReducer(
+        state,
+        transactionActions.hydrateTransactions(null),
+      );
+      expect(state).toEqual({
+        latest: null,
+        history: [],
+        hydrated: true,
+        remoteHistory: [],
+        remoteHistoryStatus: 'idle',
+        remoteHistoryError: null,
+        remoteHistoryLastSyncedAt: null,
+      });
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

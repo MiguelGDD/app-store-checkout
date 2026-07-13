@@ -70,6 +70,40 @@ describe('backend api client', () => {
     );
   });
 
+  it('parses empty and non-json responses and resolves readable error messages', async () => {
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValueOnce(createResponse(200, ''))
+      .mockResolvedValueOnce(createResponse(500, 'Service unavailable'))
+      .mockResolvedValueOnce(
+        createResponse(
+          400,
+          JSON.stringify({
+            error: 'Bad request',
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(createResponse(503, ''));
+
+    globalWithFetch.fetch = fetchMock as unknown as typeof fetch;
+
+    const client = createBackendStoreApiClient();
+
+    await expect(client.getProducts() as Promise<unknown>).resolves.toBeNull();
+    await expect(client.getProducts()).rejects.toMatchObject({
+      message: 'Service unavailable',
+      status: 500,
+    });
+    await expect(client.getProducts()).rejects.toMatchObject({
+      message: 'Bad request',
+      status: 400,
+    });
+    await expect(client.getProducts()).rejects.toMatchObject({
+      message: 'La solicitud fallo con estado 503.',
+      status: 503,
+    });
+  });
+
   it('loads backend transactions from the API', async () => {
     const transactions = [
       {
@@ -191,6 +225,26 @@ describe('backend api client', () => {
       name: 'BackendApiError',
       message: 'Backend unavailable',
       status: 500,
+    });
+  });
+
+  it('uses the generic request failure message when the error payload omits text', async () => {
+    const fetchMock = jest.fn().mockResolvedValue(
+      createResponse(
+        400,
+        JSON.stringify({
+          statusCode: 400,
+        }),
+      ),
+    );
+
+    globalWithFetch.fetch = fetchMock as unknown as typeof fetch;
+
+    const client = createBackendStoreApiClient();
+
+    await expect(client.getProducts()).rejects.toMatchObject({
+      message: 'La solicitud fallo con estado 400.',
+      status: 400,
     });
   });
 

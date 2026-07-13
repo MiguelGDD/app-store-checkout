@@ -12,9 +12,11 @@ import {
   selectLatestTransactionId,
   selectLatestTransactionStatus,
   selectSelectedProduct,
+  selectTransactionHistoryLastSyncedAt,
   selectTransactionHistory,
   selectTransactionHistorySyncError,
   selectTransactionHistorySyncStatus,
+  selectTransactionHydrated,
 } from '../src/store/selectors';
 import { store, type RootState } from '../src/store/store';
 import { transactionActions } from '../src/store/transaction/transactionSlice';
@@ -50,6 +52,10 @@ describe('selectors', () => {
   });
 
   it('selects the product detail record and falls back to null when it is missing', () => {
+    expect(selectSelectedProduct(store.getState())).toBeNull();
+    expect(selectTransactionHydrated(store.getState())).toBe(true);
+    expect(selectTransactionHistoryLastSyncedAt(store.getState())).toBeNull();
+
     store.dispatch(
       checkoutActions.openProductDetail({ productId: products[0].id }),
     );
@@ -157,5 +163,19 @@ describe('selectors', () => {
         updatedAt: '2026-07-12T00:05:00.000Z',
       },
     ]);
+
+    const augmentedState = {
+      ...syncedState,
+      transaction: {
+        ...syncedState.transaction,
+        hydrated: false,
+        remoteHistoryLastSyncedAt: '2026-07-12T00:10:00.000Z',
+      },
+    } as RootState;
+
+    expect(selectTransactionHydrated(augmentedState)).toBe(false);
+    expect(selectTransactionHistoryLastSyncedAt(augmentedState)).toBe(
+      '2026-07-12T00:10:00.000Z',
+    );
   });
 });
